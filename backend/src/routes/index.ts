@@ -11,7 +11,7 @@ router.use('/auth', authRouter);
 router.use('/health', healthRouter);
 
 // Root endpoint
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   res.json({
     success: true,
     message: 'MovieFlix Dashboard API',

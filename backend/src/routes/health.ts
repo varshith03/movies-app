@@ -36,34 +36,34 @@ const router = Router();
  *       503:
  *         description: Service is unhealthy
  */
-router.get('/', (req: Request, res: Response) => {
+router.get('/', (_req: Request, res: Response) => {
   try {
     const isDbConnected = database.isDbConnected();
-    
+
     if (!isDbConnected) {
       return res.status(503).json({
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         database: 'disconnected',
         environment: config.NODE_ENV,
-        version: process.env.npm_package_version || '1.0.0',
+        version: process.env['npm_package_version'] || '1.0.0',
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: 'connected',
       environment: config.NODE_ENV,
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env['npm_package_version'] || '1.0.0',
     });
   } catch (error) {
-    res.status(503).json({
+    return res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
       database: 'error',
       environment: config.NODE_ENV,
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env['npm_package_version'] || '1.0.0',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }

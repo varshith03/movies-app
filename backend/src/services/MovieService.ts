@@ -41,7 +41,7 @@ export class MovieService {
         const cachedResults = await this.searchFromCache({
           search,
           sort,
-          filter,
+          ...(filter && { filter }),
           limit,
           offset,
         });
@@ -89,9 +89,9 @@ export class MovieService {
     try {
       // Check cache first
       if (this.cacheEnabled) {
-        const cachedMovie = await MovieModel.findOne({ 
+        const cachedMovie = await MovieModel.findOne({
           id,
-          expiresAt: { $gt: new Date() }
+          expiresAt: { $gt: new Date() },
         });
 
         if (cachedMovie) {
@@ -123,7 +123,7 @@ export class MovieService {
   public async getAnalytics(): Promise<MovieAnalytics> {
     try {
       const movies = await MovieModel.find({
-        expiresAt: { $gt: new Date() }
+        expiresAt: { $gt: new Date() },
       });
 
       const genreDistribution: Record<string, number> = {};
@@ -170,10 +170,10 @@ export class MovieService {
     }
   }
 
-  public async exportMovies(format: 'json' | 'csv' = 'json'): Promise<Movie[]> {
+  public async exportMovies(_format: 'json' | 'csv' = 'json'): Promise<Movie[]> {
     try {
       const movies = await MovieModel.find({
-        expiresAt: { $gt: new Date() }
+        expiresAt: { $gt: new Date() },
       }).limit(config.MAX_EXPORT_RECORDS);
 
       return movies.map(movie => this.transformToMovie(movie));
@@ -226,10 +226,7 @@ export class MovieService {
     const total = await MovieModel.countDocuments(searchQuery);
 
     // Get paginated results
-    const movies = await MovieModel.find(searchQuery)
-      .sort(sortQuery)
-      .skip(offset)
-      .limit(limit);
+    const movies = await MovieModel.find(searchQuery).sort(sortQuery).skip(offset).limit(limit);
 
     const meta: PaginationMeta = {
       total,
@@ -286,10 +283,12 @@ export class MovieService {
     if (!filter) return movies;
 
     const [filterType, filterValue] = filter.split(':');
-    
+
+    if (!filterValue) return movies;
+
     switch (filterType) {
       case 'genre':
-        return movies.filter(movie => 
+        return movies.filter(movie =>
           movie.genre.some(g => g.toLowerCase().includes(filterValue.toLowerCase()))
         );
       default:

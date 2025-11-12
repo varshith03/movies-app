@@ -119,7 +119,7 @@ export const adminMiddleware = async (
 // Optional auth middleware - doesn't require authentication but adds user info if present
 export const optionalAuthMiddleware = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -127,7 +127,7 @@ export const optionalAuthMiddleware = async (
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      
+
       if (token) {
         try {
           const decoded = await authService.verifyToken(token);

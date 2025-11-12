@@ -44,7 +44,7 @@ export class AuthController {
       logger.info(`Successful login for user: ${email}`);
     } catch (error) {
       logger.error('Login controller error:', error);
-      
+
       if (error instanceof Error && error.message === 'Invalid credentials') {
         res.status(401).json({
           success: false,
@@ -97,7 +97,11 @@ export class AuthController {
         return;
       }
 
-      const user = await authService.createUser({ email, password, role });
+      const user = await authService.createUser({
+        email,
+        password,
+        ...(role && { role }),
+      });
 
       res.status(201).json({
         success: true,
@@ -108,7 +112,7 @@ export class AuthController {
       logger.info(`New user registered: ${email}`);
     } catch (error) {
       logger.error('Registration controller error:', error);
-      
+
       if (error instanceof Error && error.message === 'User already exists') {
         res.status(409).json({
           success: false,

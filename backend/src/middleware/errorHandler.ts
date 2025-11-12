@@ -21,7 +21,7 @@ export const errorHandler = (
   error: Error | AppError,
   req: Request,
   res: Response<ErrorResponse>,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   let statusCode = 500;
   let code = 'INTERNAL_SERVER_ERROR';
@@ -50,8 +50,7 @@ export const errorHandler = (
     statusCode = 401;
     code = 'INVALID_TOKEN';
     message = 'Invalid authentication token';
-  }
-  else if (error.name === 'TokenExpiredError') {
+  } else if (error.name === 'TokenExpiredError') {
     statusCode = 401;
     code = 'TOKEN_EXPIRED';
     message = 'Authentication token has expired';
@@ -82,8 +81,8 @@ export const errorHandler = (
       message,
       code,
       statusCode,
-      ...(process.env.NODE_ENV === 'development' && { 
-        details: error.stack 
+      ...(process.env['NODE_ENV'] === 'development' && {
+        details: error.stack,
       }),
     },
   };
@@ -94,14 +93,10 @@ export const errorHandler = (
 // 404 handler
 export const notFoundHandler = (
   req: Request,
-  res: Response<ErrorResponse>,
+  _res: Response<ErrorResponse>,
   next: NextFunction
 ): void => {
-  const error = new AppError(
-    `Route ${req.originalUrl} not found`,
-    404,
-    'ROUTE_NOT_FOUND'
-  );
+  const error = new AppError(`Route ${req.originalUrl} not found`, 404, 'ROUTE_NOT_FOUND');
   next(error);
 };
 

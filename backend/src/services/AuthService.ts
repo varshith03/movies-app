@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { UserModel, IUserDocument } from '@/models/User.js';
+import { UserModel } from '@/models/User.js';
 import { config } from '@/config/env.js';
 import logger from '@/config/logger.js';
 import { LoginRequest, LoginResponse, JwtPayload, User } from '@/types/index.js';
@@ -40,7 +39,7 @@ export class AuthService {
 
       // Generate JWT token
       const token = this.generateToken({
-        userId: user._id.toString(),
+        userId: (user._id as any).toString(),
         email: user.email,
         role: user.role,
       });
@@ -50,7 +49,7 @@ export class AuthService {
       return {
         token,
         user: {
-          id: user._id.toString(),
+          id: (user._id as any).toString(),
           email: user.email,
           role: user.role,
           createdAt: user.createdAt,
@@ -89,7 +88,7 @@ export class AuthService {
       logger.info(`User created: ${email}`);
 
       return {
-        id: user._id.toString(),
+        id: (user._id as any).toString(),
         email: user.email,
         role: user.role,
         createdAt: user.createdAt,
@@ -124,7 +123,7 @@ export class AuthService {
       }
 
       return {
-        id: user._id.toString(),
+        id: (user._id as any).toString(),
         email: user.email,
         role: user.role,
         createdAt: user.createdAt,
@@ -142,9 +141,9 @@ export class AuthService {
       const adminPassword = config.ADMIN_PASSWORD;
 
       // Check if admin user already exists
-      const existingAdmin = await UserModel.findOne({ 
+      const existingAdmin = await UserModel.findOne({
         email: adminEmail,
-        role: 'admin'
+        role: 'admin',
       });
 
       if (existingAdmin) {
@@ -169,7 +168,7 @@ export class AuthService {
   private generateToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
     return jwt.sign(payload, this.jwtSecret, {
       expiresIn: this.jwtExpiresIn,
-    });
+    } as jwt.SignOptions);
   }
 }
 

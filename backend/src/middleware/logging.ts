@@ -1,13 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { requestLogger } from '@/config/logger.js';
 
-export const requestLoggingMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const requestLoggingMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const startTime = Date.now();
-  
+
   // Log request
   requestLogger.info('Request started', {
     method: req.method,
@@ -19,9 +15,9 @@ export const requestLoggingMiddleware = (
 
   // Override res.end to capture response data
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function (this: any, chunk?: any, encoding?: any): any {
     const duration = Date.now() - startTime;
-    
+
     // Log response
     requestLogger.info('Request completed', {
       method: req.method,
@@ -33,22 +29,17 @@ export const requestLoggingMiddleware = (
     });
 
     // Call original end method
-    originalEnd.call(this, chunk, encoding);
-  };
-
+    return originalEnd.call(this, chunk, encoding);
+  } as any;
   next();
 };
 
 // Health check endpoint - lightweight logging
-export const healthCheckLogger = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const healthCheckLogger = (req: Request, res: Response, next: NextFunction): void => {
   if (req.path === '/health' || req.path === '/api/health') {
     // Skip detailed logging for health checks
     return next();
   }
-  
+
   return requestLoggingMiddleware(req, res, next);
 };

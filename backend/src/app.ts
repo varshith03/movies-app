@@ -15,7 +15,6 @@ import {
   errorHandler,
   notFoundHandler,
   apiLimiter,
-  requestLoggingMiddleware,
   healthCheckLogger,
 } from './middleware/index.js';
 
@@ -86,7 +85,7 @@ class App {
 
   private initializeRoutes(): void {
     // Health check route (before API routes for quick access)
-    this.express.get('/health', (req, res) => {
+    this.express.get('/health', (_req, res) => {
       res.status(200).json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -98,7 +97,7 @@ class App {
     this.express.use('/api', apiRoutes);
 
     // Root route
-    this.express.get('/', (req, res) => {
+    this.express.get('/', (_req, res) => {
       res.status(200).json({
         message: 'MovieFlix Dashboard API',
         version: '1.0.0',
@@ -225,7 +224,7 @@ class App {
     );
 
     // Serve swagger.json
-    this.express.get('/api/swagger.json', (req, res) => {
+    this.express.get('/api/swagger.json', (_req, res) => {
       res.setHeader('Content-Type', 'application/json');
       res.send(swaggerSpec);
     });

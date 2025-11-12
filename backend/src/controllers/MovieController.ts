@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { movieService } from '@/services/MovieService.js';
 import logger from '@/config/logger.js';
-import { MovieSearchQuery, ApiResponse, ErrorResponse } from '@/types/index.js';
-import createCsvWriter from 'csv-writer';
+import { MovieSearchQuery, ApiResponse } from '@/types/index.js';
+import * as createCsvWriter from 'csv-writer';
 import path from 'path';
 import { promises as fs } from 'fs';
 
@@ -24,7 +24,7 @@ export class MovieController {
       const searchQuery: MovieSearchQuery = {
         search,
         sort: sort as 'rating' | 'year' | 'title',
-        filter,
+        ...(filter && { filter }),
         limit: Math.min(parseInt(limit) || 20, 100), // Max 100 per page
         page: Math.max(parseInt(page) || 1, 1), // Min page 1
       };
@@ -44,7 +44,7 @@ export class MovieController {
   }
 
   public async getMovieById(
-    req: Request<{ id: string }>,
+    req: Request,
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> {
@@ -83,7 +83,7 @@ export class MovieController {
   }
 
   public async getAnalytics(
-    req: Request,
+    _req: Request,
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> {
@@ -101,13 +101,9 @@ export class MovieController {
     }
   }
 
-  public async exportMovies(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  public async exportMovies(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const format = (req.query.format as string) || 'json';
+      const format = (req.query['format'] as string) || 'json';
 
       if (!['json', 'csv'].includes(format)) {
         res.status(400).json({
@@ -166,15 +162,12 @@ export class MovieController {
       // Send file
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      
+
       const fileBuffer = await fs.readFile(filePath);
       res.status(200).send(fileBuffer);
 
       // Clean up temp file
-      await fs.unlink(filePath).catch(err => 
-        logger.warn('Failed to delete temp CSV file:', err)
-      );
-
+      await fs.unlink(filePath).catch(err => logger.warn('Failed to delete temp CSV file:', err));
     } catch (error) {
       logger.error('Export controller error:', error);
       next(error);
