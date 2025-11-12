@@ -5,7 +5,8 @@ A production-ready Express.js REST API built with TypeScript, following clean ar
 ## 🚀 Features
 
 ### Core Functionality
-- **Movie Search & Discovery**: Search movies using OMDb or TMDB API with advanced filtering and sorting
+
+- **Movie Search & Discovery**: Search movies using OMDb API with advanced filtering and sorting
 - **Intelligent Caching**: MongoDB-based caching with automatic TTL expiration (24 hours)
 - **Analytics Dashboard**: Genre distribution, average ratings, and runtime analytics
 - **Data Export**: JSON and CSV export capabilities for movie data
@@ -14,18 +15,21 @@ A production-ready Express.js REST API built with TypeScript, following clean ar
 ### API Endpoints
 
 #### Movies
+
 - `GET /api/movies?search={title}&sort={rating|year|title}&filter=genre:Sci-Fi&limit=20&page=1` - Search movies
 - `GET /api/movies/:id` - Get movie details by ID
 - `GET /api/movies/analytics` - Get movie analytics (authenticated)
 - `GET /api/movies/export?format={json|csv}` - Export movies (admin only)
 
 #### Authentication
+
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
 - `GET /api/auth/profile` - Get user profile (authenticated)
 - `POST /api/auth/refresh` - Refresh JWT token (authenticated)
 
 #### System
+
 - `GET /health` - Basic health check
 - `GET /api/health` - Detailed health status
 - `GET /api/docs` - Swagger API documentation
@@ -36,7 +40,7 @@ A production-ready Express.js REST API built with TypeScript, following clean ar
 - **Framework**: Express.js with TypeScript
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: JWT with bcrypt password hashing
-- **External APIs**: OMDb API / TMDB API integration
+- **External APIs**: OMDb API integration
 - **Logging**: Winston with structured logging
 - **Validation**: Zod for environment and data validation
 - **Testing**: Jest with Supertest
@@ -49,7 +53,6 @@ A production-ready Express.js REST API built with TypeScript, following clean ar
 - Node.js 18+ and npm 9+
 - MongoDB 4.4+ (local or cloud instance)
 - OMDb API key (get from [OMDb API](http://www.omdbapi.com/apikey.aspx))
-- TMDB API key (optional, get from [TMDB](https://developers.themoviedb.org/3))
 
 ## ⚡ Quick Start
 
@@ -64,11 +67,13 @@ npm install
 ### 2. Environment Configuration
 
 Copy the environment template:
+
 ```bash
 cp .env.example .env
 ```
 
 Update `.env` with your configuration:
+
 ```env
 # Required Configuration
 NODE_ENV=development
@@ -82,8 +87,6 @@ ADMIN_EMAIL=admin@movieflix.com
 ADMIN_PASSWORD=admin123
 
 # Optional Configuration
-TMDB_API_KEY=your_tmdb_api_key_here
-MOVIE_API_PROVIDER=omdb
 CACHE_TTL_HOURS=24
 RATE_LIMIT_MAX_REQUESTS=100
 ```
@@ -91,22 +94,26 @@ RATE_LIMIT_MAX_REQUESTS=100
 ### 3. Start MongoDB
 
 **Using Docker:**
+
 ```bash
 docker run -d -p 27017:27017 --name mongodb mongo:latest
 ```
 
 **Or install locally:**
+
 - macOS: `brew install mongodb-community`
 - Ubuntu: Follow [MongoDB installation guide](https://docs.mongodb.com/manual/installation/)
 
 ### 4. Run the Application
 
 **Development mode:**
+
 ```bash
 npm run dev
 ```
 
 **Production build:**
+
 ```bash
 npm run build
 npm start
@@ -128,7 +135,7 @@ src/
 ├── server.ts              # Server bootstrap and lifecycle
 ├── config/                # Configuration management
 │   ├── env.ts            # Environment validation with Zod
-│   ├── database.ts       # MongoDB connection management  
+│   ├── database.ts       # MongoDB connection management
 │   └── logger.ts         # Winston logging configuration
 ├── controllers/           # HTTP request handlers
 │   ├── MovieController.ts
@@ -139,7 +146,7 @@ src/
 │   └── index.ts
 ├── services/             # Business logic layer
 │   ├── MovieService.ts       # Movie caching and search logic
-│   ├── ExternalMovieService.ts # OMDb/TMDB API integration
+│   ├── ExternalMovieService.ts # OMDb API integration
 │   └── AuthService.ts        # Authentication and user management
 ├── models/               # Database schemas
 │   ├── Movie.ts          # Movie cache schema
@@ -165,7 +172,8 @@ src/
 4. **Admin Routes**: Require admin role (movies export, etc.)
 
 ### Default Admin User
-- Email: `admin@movieflix.com` 
+
+- Email: `admin@movieflix.com`
 - Password: `admin123`
 - Role: `admin`
 
@@ -174,6 +182,7 @@ src/
 ## 🧪 Testing
 
 ### Test Structure
+
 ```
 src/tests/
 ├── setup.ts              # Jest configuration and MongoDB memory server
@@ -183,6 +192,7 @@ src/tests/
 ```
 
 ### Running Tests
+
 ```bash
 # Run all tests
 npm test
@@ -195,6 +205,7 @@ npm run test:coverage
 ```
 
 ### Test Coverage Targets
+
 - **Statements**: 80%+
 - **Branches**: 80%+
 - **Functions**: 80%+

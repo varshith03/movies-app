@@ -11,8 +11,8 @@ import logger from './config/logger.js';
 import { database } from './config/database.js';
 
 // Middleware imports
-import { 
-  errorHandler, 
+import {
+  errorHandler,
   notFoundHandler,
   apiLimiter,
   requestLoggingMiddleware,
@@ -38,29 +38,34 @@ class App {
 
   private initializeMiddleware(): void {
     // Security middleware
-    this.express.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
-          fontSrc: ["'self'", "fonts.gstatic.com"],
-          imgSrc: ["'self'", "data:", "https:"],
-          scriptSrc: ["'self'"],
+    this.express.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
+            fontSrc: ["'self'", 'fonts.gstatic.com'],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            scriptSrc: ["'self'"],
+          },
         },
-      },
-      crossOriginEmbedderPolicy: false, // Allow for Swagger UI
-    }));
+        crossOriginEmbedderPolicy: false, // Allow for Swagger UI
+      })
+    );
 
     // CORS configuration
-    this.express.use(cors({
-      origin: config.NODE_ENV === 'production' 
-        ? ['https://yourdomain.com'] // Replace with actual production domains
-        : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
-      credentials: true,
-      optionsSuccessStatus: 200,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    }));
+    this.express.use(
+      cors({
+        origin:
+          config.NODE_ENV === 'production'
+            ? ['https://yourdomain.com'] // Replace with actual production domains
+            : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
+        credentials: true,
+        optionsSuccessStatus: 200,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      })
+    );
 
     // Compression middleware
     this.express.use(compression());
@@ -111,7 +116,8 @@ class App {
         info: {
           title: 'MovieFlix Dashboard API',
           version: '1.0.0',
-          description: 'A production-ready Express.js API for movie data management with caching, authentication, and analytics.',
+          description:
+            'A production-ready Express.js API for movie data management with OMDb API integration, caching, authentication, and analytics.',
           contact: {
             name: 'MovieFlix Team',
             email: 'support@movieflix.com',
@@ -123,10 +129,12 @@ class App {
         },
         servers: [
           {
-            url: config.NODE_ENV === 'production' 
-              ? 'https://your-api-domain.com' // Replace with actual production URL
-              : `http://localhost:${config.PORT}`,
-            description: config.NODE_ENV === 'production' ? 'Production server' : 'Development server',
+            url:
+              config.NODE_ENV === 'production'
+                ? 'https://your-api-domain.com' // Replace with actual production URL
+                : `http://localhost:${config.PORT}`,
+            description:
+              config.NODE_ENV === 'production' ? 'Production server' : 'Development server',
           },
         ],
         components: {
@@ -144,16 +152,16 @@ class App {
                 id: { type: 'string', example: 'tt1375666' },
                 title: { type: 'string', example: 'Inception' },
                 year: { type: 'integer', example: 2010 },
-                genre: { 
-                  type: 'array', 
+                genre: {
+                  type: 'array',
                   items: { type: 'string' },
-                  example: ['Action', 'Sci-Fi', 'Thriller']
+                  example: ['Action', 'Sci-Fi', 'Thriller'],
                 },
                 director: { type: 'string', example: 'Christopher Nolan' },
                 actors: {
                   type: 'array',
                   items: { type: 'string' },
-                  example: ['Leonardo DiCaprio', 'Marion Cotillard', 'Tom Hardy']
+                  example: ['Leonardo DiCaprio', 'Marion Cotillard', 'Tom Hardy'],
                 },
                 rating: { type: 'number', example: 8.8 },
                 runtime: { type: 'integer', example: 148 },
@@ -173,16 +181,16 @@ class App {
             MovieAnalytics: {
               type: 'object',
               properties: {
-                genreDistribution: { 
+                genreDistribution: {
                   type: 'object',
                   additionalProperties: { type: 'integer' },
-                  example: { 'Action': 25, 'Comedy': 18, 'Drama': 22 }
+                  example: { Action: 25, Comedy: 18, Drama: 22 },
                 },
                 averageRating: { type: 'number', example: 7.2 },
                 averageRuntimeByYear: {
                   type: 'object',
                   additionalProperties: { type: 'number' },
-                  example: { '2020': 120, '2021': 115, '2022': 118 }
+                  example: { '2020': 120, '2021': 115, '2022': 118 },
                 },
                 totalMovies: { type: 'integer', example: 150 },
               },
@@ -206,11 +214,15 @@ class App {
 
     const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-    this.express.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-      explorer: true,
-      customCss: '.swagger-ui .topbar { display: none }',
-      customSiteTitle: 'MovieFlix API Documentation',
-    }));
+    this.express.use(
+      '/api/docs',
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+        customCss: '.swagger-ui .topbar { display: none }',
+        customSiteTitle: 'MovieFlix API Documentation',
+      })
+    );
 
     // Serve swagger.json
     this.express.get('/api/swagger.json', (req, res) => {
@@ -231,10 +243,10 @@ class App {
     try {
       // Connect to database
       await database.connect();
-      
+
       // Initialize admin user
       await authService.initializeAdminUser();
-      
+
       logger.info('Application initialized successfully');
     } catch (error) {
       logger.error('Application initialization failed:', error);

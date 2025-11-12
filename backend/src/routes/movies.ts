@@ -80,7 +80,7 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
- *         description: Movie ID (IMDb ID or TMDB ID)
+ *         description: Movie ID (IMDb ID)
  *     responses:
  *       200:
  *         description: Movie retrieved successfully

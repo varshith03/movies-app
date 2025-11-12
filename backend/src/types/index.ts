@@ -103,24 +103,6 @@ export interface OmdbSearchResponse {
   Error?: string;
 }
 
-export interface TmdbMovieResponse {
-  id: number;
-  title: string;
-  release_date: string;
-  genre_ids: number[];
-  overview: string;
-  runtime?: number;
-  vote_average: number;
-  poster_path?: string;
-}
-
-export interface TmdbSearchResponse {
-  page: number;
-  results: TmdbMovieResponse[];
-  total_pages: number;
-  total_results: number;
-}
-
 export interface CacheEntry<T> {
   data: T;
   createdAt: Date;

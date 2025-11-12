@@ -1,24 +1,14 @@
 import axios from 'axios';
 import { config } from '@/config/env.js';
 import logger from '@/config/logger.js';
-import { 
-  Movie, 
-  OmdbMovieResponse, 
-  OmdbSearchResponse,
-  TmdbMovieResponse, 
-  TmdbSearchResponse 
-} from '@/types/index.js';
+import { Movie, OmdbMovieResponse, OmdbSearchResponse } from '@/types/index.js';
 
 export class ExternalMovieService {
   private static instance: ExternalMovieService;
   private omdbApiKey: string;
-  private tmdbApiKey?: string;
-  private provider: 'omdb' | 'tmdb';
 
   private constructor() {
     this.omdbApiKey = config.OMDB_API_KEY;
-    this.tmdbApiKey = config.TMDB_API_KEY;
-    this.provider = config.MOVIE_API_PROVIDER;
   }
 
   public static getInstance(): ExternalMovieService {
@@ -30,11 +20,7 @@ export class ExternalMovieService {
 
   public async searchMovies(query: string, page = 1): Promise<Movie[]> {
     try {
-      if (this.provider === 'omdb') {
-        return await this.searchMoviesOMDB(query, page);
-      } else {
-        return await this.searchMoviesTMDB(query, page);
-      }
+      return await this.searchMoviesOMDB(query, page);
     } catch (error) {
       logger.error('External movie search failed:', error);
       throw new Error('Failed to search movies from external API');
@@ -43,11 +29,7 @@ export class ExternalMovieService {
 
   public async getMovieById(id: string): Promise<Movie | null> {
     try {
-      if (this.provider === 'omdb') {
-        return await this.getMovieByIdOMDB(id);
-      } else {
-        return await this.getMovieByIdTMDB(id);
-      }
+      return await this.getMovieByIdOMDB(id);
     } catch (error) {
       logger.error('External movie fetch failed:', error);
       throw new Error('Failed to fetch movie from external API');
@@ -82,8 +64,9 @@ export class ExternalMovieService {
     );
 
     return detailedMovies
-      .filter((result): result is PromiseFulfilledResult<Movie | null> => 
-        result.status === 'fulfilled' && result.value !== null
+      .filter(
+        (result): result is PromiseFulfilledResult<Movie | null> =>
+          result.status === 'fulfilled' && result.value !== null
       )
       .map(result => result.value as Movie);
   }
@@ -106,51 +89,6 @@ export class ExternalMovieService {
     return this.transformOmdbToMovie(response.data);
   }
 
-  private async searchMoviesTMDB(query: string, page: number): Promise<Movie[]> {
-    if (!this.tmdbApiKey) {
-      throw new Error('TMDB API key not configured');
-    }
-
-    const response = await axios.get<TmdbSearchResponse>('https://api.themoviedb.org/3/search/movie', {
-      params: {
-        api_key: this.tmdbApiKey,
-        query,
-        page,
-      },
-      timeout: 10000,
-    });
-
-    // Get detailed info for each movie
-    const detailedMovies = await Promise.allSettled(
-      response.data.results.map(movie => this.getMovieByIdTMDB(movie.id.toString()))
-    );
-
-    return detailedMovies
-      .filter((result): result is PromiseFulfilledResult<Movie | null> => 
-        result.status === 'fulfilled' && result.value !== null
-      )
-      .map(result => result.value as Movie);
-  }
-
-  private async getMovieByIdTMDB(tmdbId: string): Promise<Movie | null> {
-    if (!this.tmdbApiKey) {
-      throw new Error('TMDB API key not configured');
-    }
-
-    const [movieResponse, creditsResponse] = await Promise.all([
-      axios.get(`https://api.themoviedb.org/3/movie/${tmdbId}`, {
-        params: { api_key: this.tmdbApiKey },
-        timeout: 10000,
-      }),
-      axios.get(`https://api.themoviedb.org/3/movie/${tmdbId}/credits`, {
-        params: { api_key: this.tmdbApiKey },
-        timeout: 10000,
-      }),
-    ]);
-
-    return this.transformTmdbToMovie(movieResponse.data, creditsResponse.data);
-  }
-
   private transformOmdbToMovie(omdbMovie: OmdbMovieResponse): Movie {
     return {
       id: omdbMovie.imdbID,
@@ -165,26 +103,9 @@ export class ExternalMovieService {
     };
   }
 
-  private transformTmdbToMovie(tmdbMovie: any, credits: any): Movie {
-    const director = credits.crew?.find((person: any) => person.job === 'Director');
-    const actors = credits.cast?.slice(0, 10).map((actor: any) => actor.name) || [];
-
-    return {
-      id: `tmdb_${tmdbMovie.id}`,
-      title: tmdbMovie.title,
-      year: new Date(tmdbMovie.release_date).getFullYear() || 0,
-      genre: tmdbMovie.genres?.map((g: any) => g.name) || [],
-      director: director?.name || 'Unknown',
-      actors,
-      rating: tmdbMovie.vote_average || 0,
-      runtime: tmdbMovie.runtime || 0,
-      plot: tmdbMovie.overview || 'No plot available',
-    };
-  }
-
   private parseRuntime(runtime: string): number {
     const match = runtime.match(/(\d+)/);
-    return match ? parseInt(match[1]) : 0;
+    return match ? parseInt(match[1]!) : 0;
   }
 }
 

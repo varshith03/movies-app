@@ -27,14 +27,13 @@ class Database {
         maxPoolSize: 10, // Maximum number of connections in the pool
         serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
         socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-        bufferMaxEntries: 0, // Disable mongoose buffering
       });
 
       this.isConnected = true;
       logger.info('Successfully connected to MongoDB');
 
       // Handle connection events
-      mongoose.connection.on('error', (error) => {
+      mongoose.connection.on('error', error => {
         logger.error('MongoDB connection error:', error);
         this.isConnected = false;
       });
@@ -48,7 +47,6 @@ class Database {
         logger.info('MongoDB reconnected');
         this.isConnected = true;
       });
-
     } catch (error) {
       logger.error('Failed to connect to MongoDB:', error);
       this.isConnected = false;

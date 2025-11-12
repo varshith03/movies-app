@@ -6,22 +6,22 @@ import logger from '@/config/logger.js';
 export const apiLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS, // 15 minutes
   max: config.RATE_LIMIT_MAX_REQUESTS, // Limit each IP to requests per windowMs
-  message: {
-    success: false,
-    error: {
-      message: 'Too many requests from this IP, please try again later',
-      code: 'RATE_LIMIT_EXCEEDED',
-      statusCode: 429,
-    },
-  },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => {
+  skip: req => {
     // Skip rate limiting for health checks
     return req.path === '/health' || req.path === '/api/health';
   },
-  onLimitReached: (req) => {
+  handler: (req, res) => {
     logger.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
+    res.status(429).json({
+      success: false,
+      error: {
+        message: 'Too many requests from this IP, please try again later',
+        code: 'RATE_LIMIT_EXCEEDED',
+        statusCode: 429,
+      },
+    });
   },
 });
 
@@ -29,18 +29,18 @@ export const apiLimiter = rateLimit({
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 requests per windowMs for auth endpoints
-  message: {
-    success: false,
-    error: {
-      message: 'Too many authentication attempts, please try again later',
-      code: 'AUTH_RATE_LIMIT_EXCEEDED',
-      statusCode: 429,
-    },
-  },
   standardHeaders: true,
   legacyHeaders: false,
-  onLimitReached: (req) => {
+  handler: (req, res) => {
     logger.warn(`Auth rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
+    res.status(429).json({
+      success: false,
+      error: {
+        message: 'Too many authentication attempts, please try again later',
+        code: 'AUTH_RATE_LIMIT_EXCEEDED',
+        statusCode: 429,
+      },
+    });
   },
 });
 
@@ -48,17 +48,17 @@ export const authLimiter = rateLimit({
 export const searchLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 30, // 30 requests per minute for search
-  message: {
-    success: false,
-    error: {
-      message: 'Too many search requests, please try again later',
-      code: 'SEARCH_RATE_LIMIT_EXCEEDED',
-      statusCode: 429,
-    },
-  },
   standardHeaders: true,
   legacyHeaders: false,
-  onLimitReached: (req) => {
+  handler: (req, res) => {
     logger.warn(`Search rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
+    res.status(429).json({
+      success: false,
+      error: {
+        message: 'Too many search requests, please try again later',
+        code: 'SEARCH_RATE_LIMIT_EXCEEDED',
+        statusCode: 429,
+      },
+    });
   },
 });
