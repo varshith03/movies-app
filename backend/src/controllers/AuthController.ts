@@ -12,7 +12,6 @@ export class AuthController {
     try {
       const { username, password } = req.body;
 
-      // Validate input
       if (!username || !password) {
         res.status(400).json({
           success: false,
@@ -21,7 +20,6 @@ export class AuthController {
         return;
       }
 
-      // Validate credentials
       const user = await this.authService.validateCredentials(
         username,
         password
@@ -35,7 +33,6 @@ export class AuthController {
         return;
       }
 
-      // Generate JWT token
       const token = this.authService.generateToken(user);
 
       res.status(200).json({

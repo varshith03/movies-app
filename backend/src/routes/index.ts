@@ -4,11 +4,9 @@ import movieRoutes from "./movies";
 
 const router = Router();
 
-// Route prefixes
 router.use("/auth", authRoutes);
 router.use("/movies", movieRoutes);
 
-// Health check endpoint
 router.get("/health", (req, res) => {
   res.status(200).json({
     success: true,

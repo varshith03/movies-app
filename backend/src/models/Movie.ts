@@ -92,7 +92,6 @@ const movieSchema = new Schema<IMovie>(
   }
 );
 
-// Create text index for search functionality
 movieSchema.index({
   title: "text",
   plot: "text",
@@ -100,12 +99,10 @@ movieSchema.index({
   actors: "text",
 });
 
-// Add virtual for id field
 movieSchema.virtual("id").get(function () {
   return this._id.toString();
 });
 
-// Ensure virtual fields are serialized
 movieSchema.set("toJSON", {
   virtuals: true,
   transform: function (doc: any, ret: any) {
@@ -116,7 +113,6 @@ movieSchema.set("toJSON", {
   },
 });
 
-// Create compound indexes for common queries
 movieSchema.index({ genre: 1, rating: -1 });
 movieSchema.index({ year: -1, rating: -1 });
 

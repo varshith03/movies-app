@@ -2,22 +2,22 @@ import { Document } from "mongoose";
 
 export interface IMovie extends Document {
   _id: string;
-  id: string; // String ID for API response
+  id: string;
   title: string;
   year: number;
-  day?: number; // Day of release (1-31)
-  month?: number; // Month of release (1-12)
+  day?: number;
+  month?: number;
   genre: string[];
   director: string;
-  actors: string[]; // Changed from 'cast' to 'actors'
-  runtime: number; // in minutes
+  actors: string[];
+  runtime: number;
   rating: number;
   plot: string;
-  box_office?: string; // New field
-  screenwriter?: string; // New field
-  studio?: string; // New field
+  box_office?: string;
+  screenwriter?: string;
+  studio?: string;
   poster?: string;
-  poster_url?: string; // New field for poster URL
+  poster_url?: string;
   releaseDate?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -42,8 +42,8 @@ export interface IPaginationQuery {
 export interface IMovieQuery extends IPaginationQuery {
   search?: string;
   sort?: "rating" | "year";
-  sortOrder?: "asc" | "desc"; // Sort order: ascending or descending (default: desc)
-  filter?: string; // Format: "genre:Sci-Fi" or "genre:Drama,Adventure"
+  sortOrder?: "asc" | "desc";
+  filter?: string;
 }
 
 export interface IPaginatedResponse<T> {

@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { IUser, IAuthToken } from "../types";
 
-// Predefined users as per requirements
 const USERS: IUser[] = [
   {
     username: "user",
@@ -49,7 +48,7 @@ export class AuthService {
 
     return {
       username: user.username,
-      password: "", // Don't return password
+      password: "",
       role: user.role,
     };
   }

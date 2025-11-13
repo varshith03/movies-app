@@ -6,19 +6,16 @@ import dotenv from "dotenv";
 import connectDB from "./config/database";
 import routes from "./routes";
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Security middleware
 app.use(helmet());
 
-// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: {
     success: false,
     message: "Too many requests from this IP, please try again later.",
@@ -27,23 +24,17 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// CORS configuration
 app.use(cors());
 
-// Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// API Routes
 app.use("/api", routes);
-
-// Root endpoint
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -60,7 +51,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -68,7 +58,6 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
 app.use(
   (
     err: Error,
@@ -85,13 +74,10 @@ app.use(
   }
 );
 
-// Start server
 const startServer = async (): Promise<void> => {
   try {
-    // Connect to MongoDB
     await connectDB();
 
-    // Start Express server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📚 API Documentation: http://localhost:${PORT}/`);
@@ -104,7 +90,6 @@ const startServer = async (): Promise<void> => {
   }
 };
 
-// Handle graceful shutdown
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully");
   process.exit(0);
@@ -115,7 +100,6 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-// Start the server
 startServer();
 
 export default app;

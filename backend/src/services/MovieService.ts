@@ -15,28 +15,22 @@ export class MovieService {
       offset = 0,
     } = query;
 
-    // Build MongoDB filter
     const mongoFilter: FilterQuery<IMovie> = {};
 
-    // Handle search functionality
     if (search) {
       mongoFilter.$or = [{ title: { $regex: search, $options: "i" } }];
     }
 
-    // Handle genre filtering (format: "genre:Sci-Fi" or "genre:Drama,Adventure")
     if (filter) {
       const [filterType, filterValue] = filter.split(":");
       if (filterType === "genre" && filterValue) {
-        // Handle comma-separated genre values
         const genres = filterValue.split(",").map((genre) => genre.trim());
 
         if (genres.length === 1) {
-          // Single genre - use $elemMatch with regex for partial matching in array
           mongoFilter.genre = {
             $elemMatch: { $regex: genres[0], $options: "i" },
           };
         } else {
-          // Multiple genres - find movies that contain any of the specified genres
           mongoFilter.genre = {
             $in: genres.map((genre) => new RegExp(genre, "i")),
           };
@@ -44,17 +38,14 @@ export class MovieService {
       }
     }
 
-    // Build sort options
     const sortDirection: SortOrder = sortOrder === "asc" ? 1 : -1;
-    let sortOptions: Record<string, SortOrder> = { _id: 1 }; // default sort by id (oldest first)
+    let sortOptions: Record<string, SortOrder> = { _id: 1 };
 
     if (sort === "rating") {
       sortOptions = { rating: sortDirection };
     } else if (sort === "year") {
       sortOptions = { year: sortDirection };
     }
-
-    // Execute queries
     const [movies, total] = await Promise.all([
       Movie.find(mongoFilter)
         .sort(sortOptions)

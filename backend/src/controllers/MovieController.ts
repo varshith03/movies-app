@@ -23,7 +23,6 @@ export class MovieController {
         offset: req.query.offset ? Number(req.query.offset) : 0,
       };
 
-      // Validate pagination parameters
       if (query.limit && (query.limit < 1 || query.limit > 100)) {
         res.status(400).json({
           success: false,
@@ -40,7 +39,6 @@ export class MovieController {
         return;
       }
 
-      // Validate sortOrder parameter
       if (query.sortOrder && !["asc", "desc"].includes(query.sortOrder)) {
         res.status(400).json({
           success: false,
@@ -106,14 +104,12 @@ export class MovieController {
     try {
       const movies = await this.movieService.getAllMoviesForExport();
 
-      // Create CSV file
       const csvFilePath = path.join(
         __dirname,
         "../../temp",
         `movies_export_${Date.now()}.csv`
       );
 
-      // Ensure temp directory exists
       const tempDir = path.dirname(csvFilePath);
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
@@ -140,7 +136,6 @@ export class MovieController {
         ],
       });
 
-      // Prepare data for CSV
       const csvData = movies.map((movie) => ({
         id: movie._id.toString(),
         title: movie.title,
@@ -165,20 +160,17 @@ export class MovieController {
 
       await csvWriter.writeRecords(csvData);
 
-      // Set headers for file download
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="movies_export.csv"`
       );
       res.setHeader("Content-Type", "text/csv");
 
-      // Stream the file and clean up
       const fileStream = fs.createReadStream(csvFilePath);
 
       fileStream.pipe(res);
 
       fileStream.on("end", () => {
-        // Clean up temp file
         fs.unlink(csvFilePath, (err) => {
           if (err) console.error("Error deleting temp file:", err);
         });
