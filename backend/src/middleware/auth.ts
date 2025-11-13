@@ -1,147 +1,64 @@
-import { Request, Response, NextFunction } from 'express';
-import { authService } from '@/services/AuthService.js';
-import logger from '@/config/logger.js';
-import { JwtPayload } from '@/types/index.js';
+import { Request, Response, NextFunction } from "express";
+import { AuthService } from "../services/AuthService";
+import { IAuthToken } from "../types";
 
-// Extend Request interface to include user
-declare module 'express' {
-  interface Request {
-    user?: JwtPayload;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: IAuthToken;
+    }
   }
 }
 
-export const authMiddleware = async (
+export const authenticateToken = (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
+): void => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({
-        success: false,
-        error: {
-          message: 'Authorization header missing or invalid format',
-          code: 'UNAUTHORIZED',
-          statusCode: 401,
-        },
-      });
-      return;
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    if (!token) {
-      res.status(401).json({
-        success: false,
-        error: {
-          message: 'Token missing',
-          code: 'UNAUTHORIZED',
-          statusCode: 401,
-        },
-      });
-      return;
-    }
-
-    try {
-      const decoded = await authService.verifyToken(token);
-      req.user = decoded;
-      next();
-    } catch (error) {
-      logger.warn('Token verification failed:', error);
-      res.status(401).json({
-        success: false,
-        error: {
-          message: error instanceof Error ? error.message : 'Token verification failed',
-          code: 'UNAUTHORIZED',
-          statusCode: 401,
-        },
-      });
-    }
-  } catch (error) {
-    logger.error('Auth middleware error:', error);
-    res.status(500).json({
+  if (!token) {
+    res.status(401).json({
       success: false,
-      error: {
-        message: 'Internal server error',
-        code: 'INTERNAL_SERVER_ERROR',
-        statusCode: 500,
-      },
+      message: "Access token required",
     });
+    return;
   }
+
+  const authService = AuthService.getInstance();
+  const decoded = authService.verifyToken(token);
+
+  if (!decoded) {
+    res.status(403).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
+    return;
+  }
+
+  req.user = decoded;
+  next();
 };
 
-export const adminMiddleware = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+export const requireRole = (role: "user" | "admin") => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
         success: false,
-        error: {
-          message: 'Authentication required',
-          code: 'UNAUTHORIZED',
-          statusCode: 401,
-        },
+        message: "Authentication required",
       });
       return;
     }
 
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== role && req.user.role !== "admin") {
       res.status(403).json({
         success: false,
-        error: {
-          message: 'Admin access required',
-          code: 'FORBIDDEN',
-          statusCode: 403,
-        },
+        message: "Insufficient permissions",
       });
       return;
     }
 
     next();
-  } catch (error) {
-    logger.error('Admin middleware error:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        message: 'Internal server error',
-        code: 'INTERNAL_SERVER_ERROR',
-        statusCode: 500,
-      },
-    });
-  }
-};
-
-// Optional auth middleware - doesn't require authentication but adds user info if present
-export const optionalAuthMiddleware = async (
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-
-      if (token) {
-        try {
-          const decoded = await authService.verifyToken(token);
-          req.user = decoded;
-        } catch (error) {
-          // Silently fail for optional auth
-          logger.debug('Optional auth failed:', error);
-        }
-      }
-    }
-
-    next();
-  } catch (error) {
-    logger.error('Optional auth middleware error:', error);
-    next(); // Continue even if there's an error
-  }
+  };
 };

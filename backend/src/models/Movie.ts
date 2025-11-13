@@ -1,20 +1,8 @@
-import { Schema, model, Document } from 'mongoose';
-import { Movie } from '@/types/index.js';
+import mongoose, { Schema } from "mongoose";
+import { IMovie } from "../types";
 
-export interface IMovieDocument extends Omit<Movie, 'id'>, Document {
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt: Date;
-}
-
-const movieSchema = new Schema<IMovieDocument>(
+const movieSchema = new Schema<IMovie>(
   {
-    id: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
     title: {
       type: String,
       required: true,
@@ -24,13 +12,26 @@ const movieSchema = new Schema<IMovieDocument>(
     year: {
       type: Number,
       required: true,
+      min: 1900,
+      max: new Date().getFullYear() + 10,
       index: true,
+    },
+    day: {
+      type: Number,
+      min: 1,
+      max: 31,
+    },
+    month: {
+      type: Number,
+      min: 1,
+      max: 12,
     },
     genre: [
       {
         type: String,
         required: true,
         trim: true,
+        index: true,
       },
     ],
     director: {
@@ -45,6 +46,11 @@ const movieSchema = new Schema<IMovieDocument>(
         trim: true,
       },
     ],
+    runtime: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     rating: {
       type: Number,
       required: true,
@@ -52,47 +58,66 @@ const movieSchema = new Schema<IMovieDocument>(
       max: 10,
       index: true,
     },
-    runtime: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
     plot: {
       type: String,
       required: true,
       trim: true,
     },
-    expiresAt: {
+    box_office: {
+      type: String,
+      trim: true,
+    },
+    screenwriter: {
+      type: String,
+      trim: true,
+    },
+    studio: {
+      type: String,
+      trim: true,
+    },
+    poster: {
+      type: String,
+      trim: true,
+    },
+    poster_url: {
+      type: String,
+      trim: true,
+    },
+    releaseDate: {
       type: Date,
-      required: true,
-      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-      index: { expireAfterSeconds: 0 }, // MongoDB TTL index
     },
   },
   {
     timestamps: true,
-    toJSON: {
-      transform: (_, ret: any) => {
-        delete ret._id;
-        delete ret.__v;
-        delete ret.expiresAt;
-        return ret;
-      },
-    },
-    toObject: {
-      transform: (_, ret: any) => {
-        delete ret._id;
-        delete ret.__v;
-        delete ret.expiresAt;
-        return ret;
-      },
-    },
   }
 );
 
-// Compound indexes for better query performance
-movieSchema.index({ title: 'text', plot: 'text' }); // Full-text search
-movieSchema.index({ genre: 1, rating: -1 }); // Genre filtering with rating sort
-movieSchema.index({ year: -1, rating: -1 }); // Year and rating sorting
+// Create text index for search functionality
+movieSchema.index({
+  title: "text",
+  plot: "text",
+  director: "text",
+  actors: "text",
+});
 
-export const MovieModel = model<IMovieDocument>('Movie', movieSchema);
+// Add virtual for id field
+movieSchema.virtual("id").get(function () {
+  return this._id.toString();
+});
+
+// Ensure virtual fields are serialized
+movieSchema.set("toJSON", {
+  virtuals: true,
+  transform: function (doc: any, ret: any) {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+});
+
+// Create compound indexes for common queries
+movieSchema.index({ genre: 1, rating: -1 });
+movieSchema.index({ year: -1, rating: -1 });
+
+export const Movie = mongoose.model<IMovie>("Movie", movieSchema);

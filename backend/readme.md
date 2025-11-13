@@ -1,216 +1,244 @@
-# MovieFlix Dashboard Backend API
+# Movies App Backend
 
-A production-ready Express.js REST API built with TypeScript, following clean architecture principles. This API provides movie search, caching, analytics, and authentication features with comprehensive documentation and testing.
+A TypeScript + Express.js backend application with MongoDB for managing movies data.
 
 ## 🚀 Features
 
-### Core Functionality
-
-- **Movie Search & Discovery**: Search movies using OMDb API with advanced filtering and sorting
-- **Intelligent Caching**: MongoDB-based caching with automatic TTL expiration (24 hours)
-- **Analytics Dashboard**: Genre distribution, average ratings, and runtime analytics
-- **Data Export**: JSON and CSV export capabilities for movie data
-- **JWT Authentication**: Secure token-based authentication with role-based access control
-
-### API Endpoints
-
-#### Movies
-
-- `GET /api/movies?search={title}&sort={rating|year|title}&filter=genre:Sci-Fi&limit=20&page=1` - Search movies
-- `GET /api/movies/:id` - Get movie details by ID
-- `GET /api/movies/analytics` - Get movie analytics (authenticated)
-- `GET /api/movies/export?format={json|csv}` - Export movies (admin only)
-
-#### Authentication
-
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/profile` - Get user profile (authenticated)
-- `POST /api/auth/refresh` - Refresh JWT token (authenticated)
-
-#### System
-
-- `GET /health` - Basic health check
-- `GET /api/health` - Detailed health status
-- `GET /api/docs` - Swagger API documentation
-
-## 🛠 Tech Stack
-
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js with TypeScript
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT with bcrypt password hashing
-- **External APIs**: OMDb API integration
-- **Logging**: Winston with structured logging
-- **Validation**: Zod for environment and data validation
-- **Testing**: Jest with Supertest
-- **Documentation**: Swagger/OpenAPI 3.0
-- **Code Quality**: ESLint, Prettier, Husky pre-commit hooks
-- **Security**: Helmet, CORS, rate limiting
+- **Authentication**: JWT-based authentication with predefined users
+- **Movie Management**: CRUD operations for movies with search, sort, filter, and pagination
+- **CSV Export**: Export movie data in CSV format
+- **Security**: Helmet, CORS, and rate limiting
+- **TypeScript**: Full TypeScript support with strict type checking
 
 ## 📋 Prerequisites
 
-- Node.js 18+ and npm 9+
-- MongoDB 4.4+ (local or cloud instance)
-- OMDb API key (get from [OMDb API](http://www.omdbapi.com/apikey.aspx))
+- Node.js >= 16.0.0
+- npm >= 8.0.0
+- MongoDB (local or Atlas)
 
-## ⚡ Quick Start
+## 🛠️ Installation
 
-### 1. Clone and Setup
+1. **Clone the repository** (if applicable)
 
-```bash
-git clone <repository-url>
-cd movieflix-dashboard-backend
-npm install
-```
+   ```bash
+   git clone <repository-url>
+   cd movies-app/backend
+   ```
 
-### 2. Environment Configuration
+2. **Install dependencies**
 
-Copy the environment template:
+   ```bash
+   npm install
+   ```
 
-```bash
-cp .env.example .env
-```
+3. **Environment Setup**
 
-Update `.env` with your configuration:
+   ```bash
+   cp .env.example .env
+   ```
 
-```env
-# Required Configuration
-NODE_ENV=development
-PORT=3001
-OMDB_API_KEY=your_omdb_api_key_here
-MONGODB_URI=mongodb://localhost:27017/movieflix-dashboard
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
+   Edit `.env` file with your configuration:
 
-# Admin User (for demo)
-ADMIN_EMAIL=admin@movieflix.com
-ADMIN_PASSWORD=admin123
+   ```env
+   PORT=8080
+   MONGODB_URI=mongodb://localhost:27017/movies_db
+   JWT_SECRET=your-secret-key
+   ```
 
-# Optional Configuration
-CACHE_TTL_HOURS=24
-RATE_LIMIT_MAX_REQUESTS=100
-```
+4. **Start MongoDB** (if running locally)
 
-### 3. Start MongoDB
+   ```bash
+   # macOS with Homebrew
+   brew services start mongodb/brew/mongodb-community
 
-**Using Docker:**
+   # Or start manually
+   mongod --config /opt/homebrew/etc/mongod.conf
+   ```
 
-```bash
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-```
+## 🏃‍♂️ Running the Application
 
-**Or install locally:**
-
-- macOS: `brew install mongodb-community`
-- Ubuntu: Follow [MongoDB installation guide](https://docs.mongodb.com/manual/installation/)
-
-### 4. Run the Application
-
-**Development mode:**
+### Development Mode
 
 ```bash
 npm run dev
 ```
 
-**Production build:**
+### Production Build
 
 ```bash
 npm run build
 npm start
 ```
 
-### 5. Verify Installation
+### Other Scripts
 
-- API: http://localhost:3001
-- Health Check: http://localhost:3001/health
-- API Documentation: http://localhost:3001/api/docs
+```bash
+npm run type-check    # TypeScript type checking
+npm run build:watch   # Build with watch mode
+npm run clean         # Clean build directory
+```
 
-## 🏗 Architecture Overview
+## 🔐 Authentication
 
-The application follows **Clean Architecture** principles:
+### Predefined Users
+
+- **User**: `user` / `user123`
+- **Admin**: `admin` / `admin123`
+
+### Login
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user", "password": "user123"}'
+```
+
+## 📚 API Endpoints
+
+### Authentication
+
+- `POST /api/auth/login` - Login and get JWT token
+- `GET /api/auth/profile` - Get user profile (protected)
+
+### Movies
+
+- `GET /api/movies` - Get movies with optional query parameters
+- `GET /api/movies/:id` - Get specific movie by ID
+- `GET /api/movies/export` - Export movies as CSV
+
+### Health Check
+
+- `GET /api/health` - API health status
+- `GET /` - API information
+
+## 🎬 Movie Data Structure
+
+Each movie object includes the following fields:
+
+| Field          | Type     | Required | Description             |
+| -------------- | -------- | -------- | ----------------------- |
+| `id`           | string   | ✅       | Unique movie identifier |
+| `title`        | string   | ✅       | Movie title             |
+| `year`         | number   | ✅       | Release year            |
+| `day`          | number   | ❌       | Day of release (1-31)   |
+| `month`        | number   | ❌       | Month of release (1-12) |
+| `genre`        | string[] | ✅       | Array of genres         |
+| `director`     | string   | ✅       | Director name           |
+| `actors`       | string[] | ✅       | Array of actor names    |
+| `runtime`      | number   | ✅       | Runtime in minutes      |
+| `rating`       | number   | ✅       | Rating (0-10)           |
+| `plot`         | string   | ✅       | Movie plot/description  |
+| `box_office`   | string   | ❌       | Box office earnings     |
+| `screenwriter` | string   | ❌       | Screenwriter name       |
+| `studio`       | string   | ❌       | Production studio       |
+| `poster`       | string   | ❌       | Poster filename         |
+| `poster_url`   | string   | ❌       | Poster URL              |
+| `releaseDate`  | Date     | ❌       | Full release date       |
+
+## 🔍 Query Parameters
+
+### GET /api/movies
+
+| Parameter   | Type   | Description                           | Example                      |
+| ----------- | ------ | ------------------------------------- | ---------------------------- |
+| `search`    | string | Search in title, plot, director, cast | `?search=matrix`             |
+| `sort`      | string | Sort by `rating` or `year`            | `?sort=rating`               |
+| `sortOrder` | string | Sort order: `asc` or `desc`           | `?sortOrder=asc`             |
+| `filter`    | string | Filter by genre (supports multiple)   | `?filter=genre:Sci-Fi,Drama` |
+| `limit`     | number | Number of results (1-100)             | `?limit=10`                  |
+| `offset`    | number | Skip number of results                | `?offset=20`                 |
+
+### Examples
+
+```bash
+# Search for movies with "matrix" in title/plot/director/cast
+GET /api/movies?search=matrix
+
+# Get Sci-Fi movies sorted by rating (descending - default)
+GET /api/movies?filter=genre:Sci-Fi&sort=rating
+
+# Get Sci-Fi movies sorted by rating (ascending)
+GET /api/movies?filter=genre:Sci-Fi&sort=rating&sortOrder=asc
+
+# Get movies sorted by year (oldest first)
+GET /api/movies?sort=year&sortOrder=asc
+
+# Get movies that are either Drama or Adventure
+GET /api/movies?filter=genre:Drama,Adventure
+
+# Combined search with multiple genres (lowest rated first)
+GET /api/movies?search=the&filter=genre:Drama,Adventure&sort=rating&sortOrder=asc
+
+# Pagination: Get 5 movies starting from offset 10
+GET /api/movies?limit=5&offset=10
+
+# Combined query with ascending year sort
+GET /api/movies?search=nolan&sort=year&sortOrder=asc&limit=5
+```
+
+## 🏗️ Project Structure
 
 ```
 src/
-├── app.ts                 # Express app configuration
-├── server.ts              # Server bootstrap and lifecycle
-├── config/                # Configuration management
-│   ├── env.ts            # Environment validation with Zod
-│   ├── database.ts       # MongoDB connection management
-│   └── logger.ts         # Winston logging configuration
-├── controllers/           # HTTP request handlers
-│   ├── MovieController.ts
-│   └── AuthController.ts
-├── routes/               # API route definitions
-│   ├── movies.ts
-│   ├── auth.ts
-│   └── index.ts
-├── services/             # Business logic layer
-│   ├── MovieService.ts       # Movie caching and search logic
-│   ├── ExternalMovieService.ts # OMDb API integration
-│   └── AuthService.ts        # Authentication and user management
-├── models/               # Database schemas
-│   ├── Movie.ts          # Movie cache schema
-│   └── User.ts           # User authentication schema
-├── middleware/           # Express middleware
-│   ├── auth.ts           # JWT authentication
-│   ├── errorHandler.ts   # Global error handling
-│   ├── rateLimiter.ts    # API rate limiting
-│   └── logging.ts        # Request/response logging
-├── types/                # TypeScript interfaces
-├── utils/                # Utility functions
-├── tests/                # Jest test suites
-└── docs/                 # API documentation
+├── config/
+│   └── database.ts          # MongoDB connection
+├── controllers/
+│   ├── AuthController.ts    # Authentication logic
+│   └── MovieController.ts   # Movie operations
+├── middleware/
+│   └── auth.ts              # JWT authentication middleware
+├── models/
+│   └── Movie.ts             # MongoDB movie schema
+├── routes/
+│   ├── auth.ts              # Authentication routes
+│   ├── movies.ts            # Movie routes
+│   └── index.ts             # Route aggregator
+├── services/
+│   ├── AuthService.ts       # Authentication business logic
+│   └── MovieService.ts      # Movie business logic
+├── types/
+│   └── index.ts             # TypeScript interfaces
+└── app.ts                   # Main application file
 ```
-
-## 🔐 Authentication & Authorization
-
-### JWT Authentication Flow
-
-1. **User Registration**: `POST /api/auth/register`
-2. **Login**: `POST /api/auth/login` → Returns JWT token
-3. **Protected Routes**: Include `Authorization: Bearer <token>` header
-4. **Admin Routes**: Require admin role (movies export, etc.)
-
-### Default Admin User
-
-- Email: `admin@movieflix.com`
-- Password: `admin123`
-- Role: `admin`
-
-**⚠️ Change default credentials in production!**
 
 ## 🧪 Testing
 
-### Test Structure
-
-```
-src/tests/
-├── setup.ts              # Jest configuration and MongoDB memory server
-├── auth.test.ts           # Authentication endpoint tests
-├── movies.test.ts         # Movie endpoint tests
-└── health.test.ts         # Health check tests
-```
-
-### Running Tests
+Currently, no tests are configured. You can add testing with Jest:
 
 ```bash
-# Run all tests
-npm test
-
-# Watch mode
-npm run test:watch
-
-# Coverage report
-npm run test:coverage
+npm install --save-dev jest @types/jest ts-jest supertest @types/supertest
 ```
 
-### Test Coverage Targets
+## 🚨 Error Handling
 
-- **Statements**: 80%+
-- **Branches**: 80%+
-- **Functions**: 80%+
-- **Lines**: 80%+
+The API uses standard HTTP status codes:
 
----
+- `200` - Success
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (missing/invalid token)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found
+- `500` - Internal Server Error
 
-**Built with ❤️ for the MovieFlix Dashboard project**
+All responses follow this format:
+
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": object (optional),
+  "pagination": object (optional for paginated responses)
+}
+```
+
+## 🔧 Environment Variables
+
+| Variable      | Description               | Default                               |
+| ------------- | ------------------------- | ------------------------------------- |
+| `PORT`        | Server port               | `8080`                                |
+| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/movies_db` |
+| `JWT_SECRET`  | JWT signing secret        | (required)                            |
+
+## 📝 License
+
+MIT License - see LICENSE file for details.

@@ -1,261 +1,121 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import dotenv from "dotenv";
+import connectDB from "./config/database";
+import routes from "./routes";
 
-// Config imports
-import { config } from './config/env.js';
-import logger from './config/logger.js';
-import { database } from './config/database.js';
+// Load environment variables
+dotenv.config();
 
-// Middleware imports
-import {
-  errorHandler,
-  notFoundHandler,
-  apiLimiter,
-  healthCheckLogger,
-} from './middleware/index.js';
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-// Routes
-import apiRoutes from './routes/index.js';
+// Security middleware
+app.use(helmet());
 
-// Services
-import { authService } from './services/AuthService.js';
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests from this IP, please try again later.",
+  },
+});
 
-class App {
-  public express: express.Application;
+app.use(limiter);
 
-  constructor() {
-    this.express = express();
-    this.initializeMiddleware();
-    this.initializeRoutes();
-    this.initializeSwagger();
-    this.initializeErrorHandling();
-  }
+// CORS configuration
+app.use(cors());
 
-  private initializeMiddleware(): void {
-    // Security middleware
-    this.express.use(
-      helmet({
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
-            fontSrc: ["'self'", 'fonts.gstatic.com'],
-            imgSrc: ["'self'", 'data:', 'https:'],
-            scriptSrc: ["'self'"],
-          },
-        },
-        crossOriginEmbedderPolicy: false, // Allow for Swagger UI
-      })
-    );
+// Body parsing middleware
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-    // CORS configuration
-    this.express.use(
-      cors({
-        origin:
-          config.NODE_ENV === 'production'
-            ? ['https://yourdomain.com'] // Replace with actual production domains
-            : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
-        credentials: true,
-        optionsSuccessStatus: 200,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-      })
-    );
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
-    // Compression middleware
-    this.express.use(compression());
+// API Routes
+app.use("/api", routes);
 
-    // Body parsing middleware
-    this.express.use(express.json({ limit: '10mb' }));
-    this.express.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Movies API Server",
+    version: "1.0.0",
+    endpoints: {
+      health: "/api/health",
+      login: "POST /api/auth/login",
+      profile: "GET /api/auth/profile",
+      movies: "GET /api/movies",
+      movieById: "GET /api/movies/:id",
+      exportMovies: "GET /api/movies/export",
+    },
+  });
+});
 
-    // Logging middleware
-    this.express.use(healthCheckLogger);
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Endpoint not found",
+  });
+});
 
-    // Rate limiting
-    this.express.use(apiLimiter);
+// Global error handler
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error("Global error:", err);
 
-    // Trust proxy for accurate IP addresses
-    this.express.set('trust proxy', 1);
-  }
-
-  private initializeRoutes(): void {
-    // Health check route (before API routes for quick access)
-    this.express.get('/health', (_req, res) => {
-      res.status(200).json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-      });
-    });
-
-    // API routes
-    this.express.use('/api', apiRoutes);
-
-    // Root route
-    this.express.get('/', (_req, res) => {
-      res.status(200).json({
-        message: 'MovieFlix Dashboard API',
-        version: '1.0.0',
-        docs: '/api/docs',
-        health: '/health',
-        timestamp: new Date().toISOString(),
-      });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
+);
 
-  private initializeSwagger(): void {
-    const swaggerOptions = {
-      definition: {
-        openapi: '3.0.0',
-        info: {
-          title: 'MovieFlix Dashboard API',
-          version: '1.0.0',
-          description:
-            'A production-ready Express.js API for movie data management with OMDb API integration, caching, authentication, and analytics.',
-          contact: {
-            name: 'MovieFlix Team',
-            email: 'support@movieflix.com',
-          },
-          license: {
-            name: 'MIT',
-            url: 'https://opensource.org/licenses/MIT',
-          },
-        },
-        servers: [
-          {
-            url:
-              config.NODE_ENV === 'production'
-                ? 'https://your-api-domain.com' // Replace with actual production URL
-                : `http://localhost:${config.PORT}`,
-            description:
-              config.NODE_ENV === 'production' ? 'Production server' : 'Development server',
-          },
-        ],
-        components: {
-          securitySchemes: {
-            bearerAuth: {
-              type: 'http',
-              scheme: 'bearer',
-              bearerFormat: 'JWT',
-            },
-          },
-          schemas: {
-            Movie: {
-              type: 'object',
-              properties: {
-                id: { type: 'string', example: 'tt1375666' },
-                title: { type: 'string', example: 'Inception' },
-                year: { type: 'integer', example: 2010 },
-                genre: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  example: ['Action', 'Sci-Fi', 'Thriller'],
-                },
-                director: { type: 'string', example: 'Christopher Nolan' },
-                actors: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  example: ['Leonardo DiCaprio', 'Marion Cotillard', 'Tom Hardy'],
-                },
-                rating: { type: 'number', example: 8.8 },
-                runtime: { type: 'integer', example: 148 },
-                plot: { type: 'string', example: 'A thief who steals corporate secrets...' },
-              },
-            },
-            User: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-                email: { type: 'string', format: 'email' },
-                role: { type: 'string', enum: ['user', 'admin'] },
-                createdAt: { type: 'string', format: 'date-time' },
-                updatedAt: { type: 'string', format: 'date-time' },
-              },
-            },
-            MovieAnalytics: {
-              type: 'object',
-              properties: {
-                genreDistribution: {
-                  type: 'object',
-                  additionalProperties: { type: 'integer' },
-                  example: { Action: 25, Comedy: 18, Drama: 22 },
-                },
-                averageRating: { type: 'number', example: 7.2 },
-                averageRuntimeByYear: {
-                  type: 'object',
-                  additionalProperties: { type: 'number' },
-                  example: { '2020': 120, '2021': 115, '2022': 118 },
-                },
-                totalMovies: { type: 'integer', example: 150 },
-              },
-            },
-            PaginationMeta: {
-              type: 'object',
-              properties: {
-                total: { type: 'integer' },
-                page: { type: 'integer' },
-                limit: { type: 'integer' },
-                totalPages: { type: 'integer' },
-                hasNextPage: { type: 'boolean' },
-                hasPrevPage: { type: 'boolean' },
-              },
-            },
-          },
-        },
-      },
-      apis: ['./src/routes/*.ts'], // Path to the API files
-    };
+// Start server
+const startServer = async (): Promise<void> => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
 
-    const swaggerSpec = swaggerJsdoc(swaggerOptions);
-
-    this.express.use(
-      '/api/docs',
-      swaggerUi.serve,
-      swaggerUi.setup(swaggerSpec, {
-        explorer: true,
-        customCss: '.swagger-ui .topbar { display: none }',
-        customSiteTitle: 'MovieFlix API Documentation',
-      })
-    );
-
-    // Serve swagger.json
-    this.express.get('/api/swagger.json', (_req, res) => {
-      res.setHeader('Content-Type', 'application/json');
-      res.send(swaggerSpec);
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📚 API Documentation: http://localhost:${PORT}/`);
+      console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`🎬 Movies Endpoint: http://localhost:${PORT}/api/movies`);
     });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
   }
+};
 
-  private initializeErrorHandling(): void {
-    // 404 handler
-    this.express.use(notFoundHandler);
+// Handle graceful shutdown
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully");
+  process.exit(0);
+});
 
-    // Global error handler
-    this.express.use(errorHandler);
-  }
+process.on("SIGINT", () => {
+  console.log("SIGINT received, shutting down gracefully");
+  process.exit(0);
+});
 
-  public async initialize(): Promise<void> {
-    try {
-      // Connect to database
-      await database.connect();
+// Start the server
+startServer();
 
-      // Initialize admin user
-      await authService.initializeAdminUser();
-
-      logger.info('Application initialized successfully');
-    } catch (error) {
-      logger.error('Application initialization failed:', error);
-      throw error;
-    }
-  }
-
-  public getExpressApp(): express.Application {
-    return this.express;
-  }
-}
-
-export default App;
+export default app;

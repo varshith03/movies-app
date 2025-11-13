@@ -1,27 +1,19 @@
-import { Router } from 'express';
-import moviesRouter from './movies.js';
-import authRouter from './auth.js';
-import healthRouter from './health.js';
+import { Router } from "express";
+import authRoutes from "./auth";
+import movieRoutes from "./movies";
 
 const router = Router();
 
-// Mount routes
-router.use('/movies', moviesRouter);
-router.use('/auth', authRouter);
-router.use('/health', healthRouter);
+// Route prefixes
+router.use("/auth", authRoutes);
+router.use("/movies", movieRoutes);
 
-// Root endpoint
-router.get('/', (_req, res) => {
-  res.json({
+// Health check endpoint
+router.get("/health", (req, res) => {
+  res.status(200).json({
     success: true,
-    message: 'MovieFlix Dashboard API',
-    version: '1.0.0',
-    documentation: '/api/docs',
-    endpoints: {
-      movies: '/api/movies',
-      auth: '/api/auth',
-      health: '/api/health',
-    },
+    message: "Movies API is running",
+    timestamp: new Date().toISOString(),
   });
 });
 

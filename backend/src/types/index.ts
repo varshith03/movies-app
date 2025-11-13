@@ -1,110 +1,58 @@
-export interface Movie {
-  id: string;
+import { Document } from "mongoose";
+
+export interface IMovie extends Document {
+  _id: string;
+  id: string; // String ID for API response
   title: string;
   year: number;
+  day?: number; // Day of release (1-31)
+  month?: number; // Month of release (1-12)
   genre: string[];
   director: string;
-  actors: string[];
+  actors: string[]; // Changed from 'cast' to 'actors'
+  runtime: number; // in minutes
   rating: number;
-  runtime: number;
   plot: string;
-}
-
-export interface MovieSearchQuery {
-  search?: string;
-  sort?: 'rating' | 'year' | 'title';
-  filter?: string; // e.g., "genre:Sci-Fi"
-  limit?: number;
-  offset?: number;
-  page?: number;
-}
-
-export interface MovieAnalytics {
-  genreDistribution: Record<string, number>;
-  averageRating: number;
-  averageRuntimeByYear: Record<string, number>;
-  totalMovies: number;
-}
-
-export interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  meta?: PaginationMeta;
-}
-
-export interface ErrorResponse {
-  success: false;
-  error: {
-    message: string;
-    code: string;
-    statusCode: number;
-    details?: unknown;
-  };
-}
-
-export interface User {
-  id: string;
-  email: string;
-  password: string;
-  role: 'admin' | 'user';
+  box_office?: string; // New field
+  screenwriter?: string; // New field
+  studio?: string; // New field
+  poster?: string;
+  poster_url?: string; // New field for poster URL
+  releaseDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
-  iat?: number;
-  exp?: number;
-}
-
-export interface LoginRequest {
-  email: string;
+export interface IUser {
+  username: string;
   password: string;
+  role: "user" | "admin";
 }
 
-export interface LoginResponse {
-  token: string;
-  user: Omit<User, 'password'>;
+export interface IAuthToken {
+  username: string;
+  role: "user" | "admin";
 }
 
-// External API Types
-export interface OmdbMovieResponse {
-  Title: string;
-  Year: string;
-  imdbID: string;
-  Type: string;
-  Poster: string;
-  Genre?: string;
-  Director?: string;
-  Actors?: string;
-  Plot?: string;
-  Runtime?: string;
-  imdbRating?: string;
-  Response: string;
-  Error?: string;
+export interface IPaginationQuery {
+  limit?: number;
+  offset?: number;
 }
 
-export interface OmdbSearchResponse {
-  Search?: OmdbMovieResponse[];
-  totalResults?: string;
-  Response: string;
-  Error?: string;
+export interface IMovieQuery extends IPaginationQuery {
+  search?: string;
+  sort?: "rating" | "year";
+  sortOrder?: "asc" | "desc"; // Sort order: ascending or descending (default: desc)
+  filter?: string; // Format: "genre:Sci-Fi" or "genre:Drama,Adventure"
 }
 
-export interface CacheEntry<T> {
-  data: T;
-  createdAt: Date;
-  expiresAt: Date;
+export interface IPaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
