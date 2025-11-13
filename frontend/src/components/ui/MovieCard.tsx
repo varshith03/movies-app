@@ -8,57 +8,27 @@ interface MovieCardProps {
   title: string;
   posterPath?: string | null;
   rating: number;
-  releaseDate?: string;
-  genreIds?: number[];
+  releaseYear?: number;
+  genres?: string[];
   className?: string;
 }
-
-const getGenreNames = (ids: number[] = []): string => {
-  const genreMap: Record<number, string> = {
-    28: "Action",
-    12: "Adventure",
-    16: "Animation",
-    35: "Comedy",
-    80: "Crime",
-    18: "Drama",
-    10751: "Family",
-    14: "Fantasy",
-    36: "History",
-    27: "Horror",
-    10402: "Music",
-    9648: "Mystery",
-    10749: "Romance",
-    878: "Sci-Fi",
-    10770: "TV Movie",
-    53: "Thriller",
-    10752: "War",
-    37: "Western",
-  };
-
-  return ids
-    .slice(0, 2)
-    .map((id) => genreMap[id] || "")
-    .filter(Boolean)
-    .join(", ");
-};
 
 export default function MovieCard({
   title,
   posterPath,
   rating,
-  releaseDate,
-  genreIds = [],
+  releaseYear,
+  genres = [],
   className,
 }: MovieCardProps) {
-  const year = releaseDate ? new Date(releaseDate).getFullYear() : "";
-  const genres = getGenreNames(genreIds);
+  const year = releaseYear ? new Date(releaseYear).getFullYear() : "";
 
   return (
     // outer padded container to match the white space around the card in your example
     <div className={cn("p-4", className)}>
       <Card className="group overflow-visible rounded-2xl shadow-md p-0">
         {/* image area with white frame / inset */}
-        <div className="py-8 px-4">
+        <div className="py-5 px-4">
           {" "}
           {/* space between card edge and framed poster */}
           <div className="rounded-xl bg-white shadow-inner">

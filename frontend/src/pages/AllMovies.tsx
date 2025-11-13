@@ -8,181 +8,40 @@ import {
   CustomDropdownCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { MovieGrid } from "@/components/ui/MovieGrid";
 import { useQuery } from "@tanstack/react-query";
 import { movieApi } from "@/lib/api/movie-api";
 import type { MovieApiResponse } from "@/types";
+import { allMovies } from "@/data/mock";
 
-// Mock genres data - replace with actual data from your API
-const GENRES = [
-  { id: 28, name: "Action" },
-  { id: 12, name: "Adventure" },
-  { id: 16, name: "Animation" },
-  { id: 35, name: "Comedy" },
-  { id: 18, name: "Drama" },
-  { id: 14, name: "Fantasy" },
-  { id: 27, name: "Horror" },
-  { id: 10749, name: "Romance" },
-  { id: 878, name: "Science Fiction" },
-  { id: 53, name: "Thriller" },
-];
+// Get unique genres from the movies data
+const getUniqueGenres = (movies: MovieApiResponse[]): Set<string> => {
+  const allGenres = new Set<string>();
+  movies.forEach((movie) => {
+    movie.genre?.forEach((genre) => allGenres.add(genre));
+  });
+  return allGenres;
+};
 
-const SORT_OPTIONS = [
-  { id: "popularity", label: "Popularity" },
-  { id: "vote_average", label: "Rating" },
-  { id: "release_date", label: "Release Date" },
-  { id: "title", label: "Title" },
-];
-
-
-const mockMovies: MovieApiResponse[] = [
-  {
-    id: 1,
-    title: "Inception",
-    poster_path:
-      "https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_%282010%29_theatrical_poster.jpg",
-    vote_average: 8.8,
-    release_date: "2010-07-16",
-    genre_ids: [28, 18, 878],
-  },
-  {
-    id: 2,
-    title: "The Dark Knight",
-    poster_path: "",
-    vote_average: 9.0,
-    release_date: "2008-07-18",
-    genre_ids: [28, 80, 18],
-  },
-  {
-    id: 3,
-    title: "The Shawshank Redemption",
-    poster_path: "/posters/shawshank_redemption.jpg",
-    vote_average: 9.3,
-    release_date: "1994-09-23",
-    genre_ids: [18, 80],
-  },
-  {
-    id: 4,
-    title: "The Godfather",
-    poster_path: "/posters/the_godfather.jpg",
-    vote_average: 9.2,
-    release_date: "1972-03-24",
-    genre_ids: [18, 80],
-  },
-  {
-    id: 5,
-    title: "Pulp Fiction",
-    poster_path: "/posters/pulp_fiction.jpg",
-    vote_average: 8.9,
-    release_date: "1994-10-14",
-    genre_ids: [80, 53, 35],
-  },
-  {
-    id: 6,
-    title: "Spirited Away",
-    poster_path: "/posters/spirited_away.jpg",
-    vote_average: 8.6,
-    release_date: "2001-07-20",
-    genre_ids: [16, 14, 18],
-  },
-  {
-    id: 7,
-    title: "The Matrix",
-    poster_path: "/posters/the_matrix.jpg",
-    vote_average: 8.7,
-    release_date: "1999-03-31",
-    genre_ids: [28, 878],
-  },
-  {
-    id: 8,
-    title: "Interstellar",
-    poster_path: "/posters/interstellar.jpg",
-    vote_average: 8.6,
-    release_date: "2014-11-07",
-    genre_ids: [12, 18, 878],
-  },
-  {
-    id: 9,
-    title: "Parasite",
-    poster_path: "/posters/parasite.jpg",
-    vote_average: 8.6,
-    release_date: "2019-05-30",
-    genre_ids: [35, 18, 53],
-  },
-  {
-    id: 10,
-    title: "The Lion King",
-    poster_path: "/posters/the_lion_king.jpg",
-    vote_average: 8.5,
-    release_date: "1994-06-24",
-    genre_ids: [16, 18, 12],
-  },
-  {
-    id: 11,
-    title: "Get Out",
-    poster_path: "/posters/get_out.jpg",
-    vote_average: 7.7,
-    release_date: "2017-02-24",
-    genre_ids: [27, 53, 35],
-  },
-  {
-    id: 12,
-    title: "Avengers: Endgame",
-    poster_path: "/posters/avengers_endgame.jpg",
-    vote_average: 8.4,
-    release_date: "2019-04-26",
-    genre_ids: [28, 12, 878],
-  },
-  {
-    id: 13,
-    title: "Toy Story",
-    poster_path: "/posters/toy_story.jpg",
-    vote_average: 8.3,
-    release_date: "1995-11-22",
-    genre_ids: [16, 35, 12],
-  },
-  {
-    id: 14,
-    title: "The Silence of the Lambs",
-    poster_path: "/posters/silence_of_the_lambs.jpg",
-    vote_average: 8.6,
-    release_date: "1991-02-14",
-    genre_ids: [80, 18, 53],
-  },
-  {
-    id: 15,
-    title: "Titanic",
-    poster_path: "/posters/titanic.jpg",
-    vote_average: 7.8,
-    release_date: "1997-12-19",
-    genre_ids: [18, 10749],
-  },
-  {
-    id: 16,
-    title: "Mad Max: Fury Road",
-    poster_path: "/posters/mad_max_fury_road.jpg",
-    vote_average: 8.1,
-    release_date: "2015-05-15",
-    genre_ids: [28, 12, 878],
-  },
-];
+// Sort options as a Set
+const SORT_OPTIONS = new Set(["Rating", "Release Date"]);
 
 export function AllMovies() {
   const [movies, setMovies] = useState<MovieApiResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("popularity");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-const { 
-    data: moviess = [], 
-    isLoading, 
-    isError, 
-    error 
+  const {
+    data: moviess = [],
+    isLoading,
+    isError,
+    error,
   } = useQuery<MovieApiResponse[], Error>({
-    queryKey: ['movies'],
+    queryKey: ["movies"],
     queryFn: movieApi.fetchMovies,
     staleTime: 5 * 60 * 1000,
   });
@@ -195,7 +54,7 @@ const {
         // const data = await response.json();
         // setMovies(data.results);
 
-        setMovies(mockMovies);
+        setMovies(allMovies);
       } catch (error) {
         console.error("Error fetching movies:", error);
       } finally {
@@ -213,22 +72,30 @@ const {
     console.log("Sort order:", sortOrder);
   }, [selectedGenres, sortBy, sortOrder]);
 
-  const handleGenreToggle = (genreId: number) => {
-    setSelectedGenres((prev) =>
-      prev.includes(genreId)
-        ? prev.filter((id) => id !== genreId)
-        : [...prev, genreId]
-    );
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(genre)) {
+        newSet.delete(genre);
+      } else {
+        newSet.add(genre);
+      }
+      return newSet;
+    });
   };
 
-  const filteredMovies = movies
+  const isGenreSelected = (genre: string) => selectedGenres.has(genre);
+  console.log(selectedGenres);
+
+  const filteredMovies = allMovies
+    .filter((movie) => {
+      if (selectedGenres.size === 0) return true;
+      return Array.from(selectedGenres).some((genre) =>
+        movie.genre?.includes(genre)
+      );
+    })
     .filter((movie) =>
       movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter(
-      (movie) =>
-        selectedGenres.length === 0 ||
-        movie.genre_ids.some((genreId) => selectedGenres.includes(genreId))
     )
     .sort((a, b) => {
       let compareResult = 0;
@@ -254,7 +121,7 @@ const {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto px-32 py-8 bg-background/95">
       <div className="flex flex-col space-y-4 mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
@@ -263,101 +130,101 @@ const {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Genre Filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="M3 6h18" />
-                    <path d="M6 12h12" />
-                    <path d="M9 18h6" />
-                  </svg>
-                  <span>Genres</span>
-                  {selectedGenres.length > 0 && (
-                    <span className="ml-1 bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs">
-                      {selectedGenres.length}
-                    </span>
-                  )}
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56 max-h-96 overflow-y-auto bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg"
-                align="end"
-              >
-                <DropdownMenuLabel className="font-semibold text-gray-900">
-                  Filter by Genre
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-100" />
-                <div className="max-h-64 overflow-y-auto p-1">
-                  {GENRES.map((genre) => (
-                    <CustomDropdownCheckboxItem
-                      key={genre.id}
-                      checked={selectedGenres.includes(genre.id)}
-                      onCheckedChange={() => handleGenreToggle(genre.id)}
-                      className="px-3 py-2 rounded-md hover:bg-gray-50 focus:bg-gray-50 transition-colors"
-                      onSelect={(e) => e.preventDefault()}
-                    >
-                      <span>{genre.name}</span>
-                      {selectedGenres.includes(genre.id) && (
-                        <CheckIcon className="h-4 w-4 text-primary ml-2" />
-                      )}
-                    </CustomDropdownCheckboxItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="h-8 w-px bg-gray-200 mx-1" />
-
-            {/* Sort Controls */}
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-md border border-gray-200 p-1">
+            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-md border border-border p-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    className="gap-1.5 text-sm font-medium text-foreground hover:bg-accent cursor-pointer"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M6 12h12" />
+                      <path d="M9 18h6" />
+                    </svg>
+                    <span>Genres</span>
+                    {selectedGenres.size > 0 && (
+                      <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs">
+                        {selectedGenres.size}
+                      </span>
+                    )}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-56 max-h-96 overflow-y-auto bg-popover/95 backdrop-blur-sm border border-border shadow-lg"
+                  align="end"
+                >
+                  <DropdownMenuLabel className="font-semibold text-popover-foreground">
+                    Filter by Genre
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-border" />
+                  <div className="max-h-64 overflow-y-auto p-1">
+                    {Array.from(getUniqueGenres(allMovies)).map((genre, i) => (
+                      <CustomDropdownCheckboxItem
+                        key={`genre-${i}`}
+                        checked={isGenreSelected(genre)}
+                        onCheckedChange={() => toggleGenre(genre)}
+                        onSelect={(e) => e.preventDefault()}
+                        className="px-3 py-2 rounded-md hover:bg-accent focus:bg-accent transition-colors"
+                      >
+                        {genre}
+                      </CustomDropdownCheckboxItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="h-8 w-px bg-border mx-1" />
+
+            {/* Sort Controls */}
+            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-md border border-border p-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-sm font-medium text-foreground hover:bg-accent cursor-pointer"
                   >
                     <span>Sort by</span>
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-48 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg"
+                  className="w-48 bg-popover/95 backdrop-blur-sm border border-border shadow-lg"
                   align="end"
                 >
-                  <DropdownMenuLabel className="font-semibold text-gray-900">
+                  <DropdownMenuLabel className="font-semibold text-popover-foreground">
                     Sort Options
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-gray-100" />
-                  {SORT_OPTIONS.map((option) => (
-                    <CustomDropdownCheckboxItem
-                      key={option.id}
-                      checked={sortBy === option.id}
-                      onCheckedChange={() => setSortBy(option.id)}
-                      className="px-3 py-2 rounded-md hover:bg-gray-50 focus:bg-gray-50 transition-colors"
-                      onSelect={(e) => e.preventDefault()}
-                    >
-                      <span>{option.label}</span>
-                      {sortBy === option.id && (
-                        <CheckIcon className="h-4 w-4 text-primary ml-2" />
-                      )}
-                    </CustomDropdownCheckboxItem>
-                  ))}
+                  <DropdownMenuSeparator className="bg-border" />
+                  {Array.from(SORT_OPTIONS).map((option) => {
+                    const optionValue = option.toLowerCase().replace(" ", "_");
+                    return (
+                      <CustomDropdownCheckboxItem
+                        key={option}
+                        checked={sortBy === optionValue}
+                        onCheckedChange={() => setSortBy(optionValue)}
+                        onSelect={(e) => e.preventDefault()}
+                        className="px-3 py-2 rounded-md hover:bg-accent focus:bg-accent transition-colors"
+                      >
+                        {option}
+                      </CustomDropdownCheckboxItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -365,10 +232,10 @@ const {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-1.5 text-sm font-medium transition-all ${
+                className={`gap-1.5 text-sm font-medium transition-all cursor-pointer ${
                   sortOrder === "desc"
-                    ? "bg-blue-50 text-primary hover:bg-blue-100"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-accent text-accent-foreground hover:bg-accent/80"
+                    : "text-foreground hover:bg-accent"
                 }`}
                 onClick={() => {
                   const newOrder = sortOrder === "asc" ? "desc" : "asc";

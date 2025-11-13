@@ -5,8 +5,8 @@ import { BarChart } from "lucide-react";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b bg-background backdrop-blur supports-[backdrop-filter]:bg-background">
+      <div className="flex h-16 items-center justify-between px-32">
         {/* Logo and Brand */}
         <Link to="/" className="flex items-center space-x-2">
           <img
@@ -18,7 +18,7 @@ export function Navbar() {
         </Link>
 
         {/* Search Bar */}
-        <div className="hidden md:block flex-1 max-w-2xl mx-8">
+        <div className="hidden md:block w-1/2 mx-8">
           <SearchBar />
         </div>
 

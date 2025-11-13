@@ -1,34 +1,31 @@
-import { Star, Play } from "lucide-react";
+import { Star, Play, Film } from "lucide-react";
+import type { Movie } from "../../types";
 
-export default function MovieDetailsMain() {
-  // Hardcoded movie data
-  const movie = {
-    title: "The Shawshank Redemption",
-    backdrop_path: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnWzU.jpg",
-    poster_path: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
-    release_date: "1994-09-23",
-    runtime: 142,
-    vote_average: 8.7,
-    genres: ["Drama", "Crime"],
-    overview: "Framed in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
-  };
+interface MovieDetailsMainProps {
+  movie: Movie;
+}
 
-  // Format release year
-  const releaseYear = new Date(movie.release_date).getFullYear();
-  
+export default function MovieDetailsMain({ movie }: MovieDetailsMainProps) {
+  // Format release year from the year field
+  const releaseYear = movie.year;
+
   // Format runtime
   const hours = Math.floor(movie.runtime / 60);
   const minutes = movie.runtime % 60;
   const formattedRuntime = `${hours}h ${minutes}m`;
 
   return (
-    <section className="relative bg-gray-900">
-      {/* Backdrop Image with Gradient Overlay */}
+    <div className="bg-background/95 pb-8 rounded-md shadow-lg">
+      {/* Backdrop Image */}
       <div
-        className="h-[50vh] bg-cover bg-center"
-        style={{
-        //   backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 100%), url(${movie.backdrop_path})`,
-        }}
+        className="w-full bg-cover bg-center bg-primary-foreground min-h-[200px] rounded-md"
+        style={
+          {
+            //   backgroundImage: `url(${movie.poster_url})`,
+            //   backgroundImage:
+            //     "linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 1))",
+          }
+        }
       />
 
       {/* Movie Content */}
@@ -38,20 +35,18 @@ export default function MovieDetailsMain() {
           <div className="w-full md:w-1/3 lg:w-1/4">
             <img
               className="w-full rounded-lg shadow-2xl"
-              src={movie.poster_path}
+              src={movie.poster_url}
               alt={movie.title}
             />
           </div>
 
           {/* Movie Info */}
-          <div className="text-white flex-1 w-full max-w-4xl">
+          <div className="text-foreground flex-1 w-full max-w-4xl">
             <h1 className="text-5xl font-bold mb-2">{movie.title}</h1>
-            <div className="flex items-center gap-4 text-gray-300 mb-6">
+            <div className="flex items-center gap-4 text-muted-foreground mb-6">
               <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 text-yellow-400" />
-                <span className="font-semibold">
-                  {movie.vote_average.toFixed(1)}
-                </span>
+                <Star className="w-5 h-5 text-yellow-500" />
+                <span className="font-semibold">{movie.rating.toFixed(1)}</span>
               </div>
               <span>{releaseYear}</span>
               <span>•</span>
@@ -60,37 +55,57 @@ export default function MovieDetailsMain() {
 
             {/* Genres */}
             <div className="flex gap-2 mb-6">
-              {movie.genres.map((genre, index) => (
+              {movie.genre.map((g, index) => (
                 <span
                   key={index}
-                  className="bg-gray-700 px-3 py-1 rounded-full text-sm"
+                  className="bg-accent px-3 py-1 rounded-full text-sm text-foreground"
                 >
-                  {genre}
+                  {g}
                 </span>
               ))}
             </div>
 
-            {/* Overview */}
-            <div className="mb-8 max-w-2xl mx-auto md:mx-0">
-              <p className="text-gray-300 leading-relaxed text-lg">
-                {movie.overview}
+            {/* Plot */}
+            <div className="mb-8 max-w-2xl mx-auto md:mx-0 mt-16">
+              <p className="text-foreground/80 leading-relaxed text-lg">
+                {movie.plot}
               </p>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-8">
-              <button className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-medium text-lg transition-colors shadow-lg">
+              <button
+                onClick={() =>
+                  window.open(
+                    `https://www.youtube.com/results?search_query=${encodeURIComponent(
+                      movie.title
+                    )}+full+movie`,
+                    "_blank"
+                  )
+                }
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-medium text-lg transition-colors shadow-lg cursor-pointer"
+              >
                 <Play className="w-5 h-5" />
                 <span>Watch Now</span>
               </button>
-              <button className="flex items-center gap-2 bg-transparent border-2 border-gray-400 hover:bg-gray-800 text-white px-8 py-3 rounded-full font-medium text-lg transition-colors">
-                <Play className="w-5 h-5" />
+              <button
+                onClick={() =>
+                  window.open(
+                    `https://www.youtube.com/results?search_query=${encodeURIComponent(
+                      movie.title
+                    )}+trailer`,
+                    "_blank"
+                  )
+                }
+                className="flex items-center gap-2 bg-transparent border-2 border-border hover:bg-accent/30 text-foreground px-8 py-3 rounded-full font-medium text-lg transition-colors cursor-pointer"
+              >
+                <Film className="w-5 h-5" />
                 <span>Watch Trailer</span>
               </button>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

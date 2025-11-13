@@ -1,17 +1,9 @@
 import { Link } from "react-router-dom";
 import MovieCard from "./MovieCard";
-
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  vote_average: number;
-  release_date: string;
-  genre_ids: number[];
-}
+import type { MovieApiResponse } from "@/types";
 
 interface MovieGridProps {
-  movies: Movie[];
+  movies: MovieApiResponse[];
   className?: string;
 }
 
@@ -32,10 +24,10 @@ export function MovieGrid({ movies, className = "" }: MovieGridProps) {
         <Link to={`/movie/${movie.id}`} key={movie.id} className="block h-full">
           <MovieCard
             title={movie.title}
-            posterPath={movie.poster_path}
-            rating={movie.vote_average}
-            releaseDate={movie.release_date}
-            genreIds={movie.genre_ids}
+            posterPath={movie.poster_url}
+            rating={movie.rating}
+            releaseYear={movie.year}
+            genres={movie.genre}
           />
         </Link>
       ))}
