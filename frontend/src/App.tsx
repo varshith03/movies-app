@@ -8,10 +8,10 @@ import {
 import { AllMovies } from "./pages/all-movies";
 import MovieDetails from "./pages/movie-details";
 import { StatsDashboard } from "./pages/stats-dashboard";
-import Login from "./pages/login.tsx";
+import Login from "./pages/Login.tsx";
 import { Toaster } from "@/components/ui/sonner";
 import { authApi } from "./lib/api/api-calls";
-import Navbar from "./components/ui/navbar.tsx";
+import Navbar from "./components/ui/Navbar.tsx";
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
