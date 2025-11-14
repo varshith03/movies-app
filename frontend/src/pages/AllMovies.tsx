@@ -10,8 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { MovieGrid } from "@/components/ui/MovieGrid";
-import { useQuery } from "@tanstack/react-query";
-import { movieApi } from "@/lib/api/movie-api";
 import type { MovieApiResponse } from "@/types";
 import { allMovies } from "@/data/mock";
 
@@ -28,23 +26,19 @@ const getUniqueGenres = (movies: MovieApiResponse[]): Set<string> => {
 const SORT_OPTIONS = new Set(["Rating", "Release Date"]);
 
 export function AllMovies() {
-  const [movies, setMovies] = useState<MovieApiResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("popularity");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const {
-    data: moviess = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery<MovieApiResponse[], Error>({
-    queryKey: ["movies"],
-    queryFn: movieApi.fetchMovies,
-    staleTime: 5 * 60 * 1000,
-  });
+  // Remove unused query for now
+  // const {
+  //   data: moviess = [],
+  // } = useQuery<MovieApiResponse[], Error>({
+  //   queryFn: movieApi.fetchMovies,
+  //   staleTime: 5 * 60 * 1000,
+  // });
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -53,8 +47,7 @@ export function AllMovies() {
         // const response = await fetch('YOUR_API_ENDPOINT');
         // const data = await response.json();
         // setMovies(data.results);
-
-        setMovies(allMovies);
+        // setMovies(allMovies);
       } catch (error) {
         console.error("Error fetching movies:", error);
       } finally {
@@ -103,9 +96,9 @@ export function AllMovies() {
       if (sortBy === "title") {
         compareResult = a.title.localeCompare(b.title);
       } else if (sortBy === "release_date") {
-        compareResult =
-          new Date(a.release_date).getTime() -
-          new Date(b.release_date).getTime();
+        const dateA = a.release_date ? new Date(a.release_date).getTime() : 0;
+        const dateB = b.release_date ? new Date(b.release_date).getTime() : 0;
+        compareResult = dateA - dateB;
       } else {
         // @ts-ignore
         compareResult = (a[sortBy] || 0) - (b[sortBy] || 0);

@@ -195,7 +195,9 @@ export function StatsDashboard() {
                 tooltip: {
                   callbacks: {
                     label: (context) =>
-                      ` ${context.parsed.y.toFixed(1)} minutes`,
+                      ` ${
+                        context.parsed.y ? context.parsed.y.toFixed(1) : "0"
+                      } minutes`,
                   },
                 },
               },
