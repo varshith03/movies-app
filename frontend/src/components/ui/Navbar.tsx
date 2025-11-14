@@ -1,12 +1,19 @@
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./theme-toggle";
-import { SearchBar } from "./search-bar";
 import { BarChart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { authApi } from "@/lib/api/api-calls";
 
 export function Navbar() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check if user is admin when component mounts
+    setIsAdmin(authApi.isAdmin());
+  }, []);
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background backdrop-blur supports-[backdrop-filter]:bg-background">
-      <div className="flex h-16 items-center justify-between px-32">
+      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo and Brand */}
         <Link to="/" className="flex items-center space-x-2">
           <img
@@ -17,35 +24,27 @@ export function Navbar() {
           <span className="text-xl font-bold">MovieBox</span>
         </Link>
 
-        {/* Search Bar */}
-        <div className="hidden md:block w-1/2 mx-8">
-          <SearchBar />
-        </div>
-
         {/* Right Side Icons */}
         <div className="flex items-center space-x-4">
-          <Link
-            to="/stats"
-            className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-input  hover:bg-accent hover:text-accent-foreground transition-colors"
-            title="Dashboard"
-          >
-            <BarChart className="h-4 w-4" />
-            <span className="sr-only">Dashboard</span>
-          </Link>
+          {isAdmin && (
+            <Link
+              to="/stats"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-input hover:bg-accent hover:text-accent-foreground transition-colors"
+              title="Dashboard"
+            >
+              <BarChart className="h-4 w-4" />
+              <span className="sr-only">Dashboard</span>
+            </Link>
+          )}
           <ThemeToggle />
           <button className="h-9 w-9 rounded-full overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=32&h=32&q=80"
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSWFfyF1Jqo8eVpUIolixhgsB_A_qoTToa3Q&s"
               alt="User"
               className="h-full w-full object-cover"
             />
           </button>
         </div>
-      </div>
-
-      {/* Mobile Search - shown only on small screens */}
-      <div className="md:hidden p-4 border-t">
-        <SearchBar />
       </div>
     </header>
   );

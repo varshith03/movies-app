@@ -41,3 +41,8 @@ export interface MovieApiResponse {
   day?: number;
   month?: number;
 }
+
+export interface JwtPayload {
+  role?: string;
+  [key: string]: unknown;
+}
