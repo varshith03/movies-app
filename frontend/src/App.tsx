@@ -10,8 +10,8 @@ import MovieDetails from "./pages/movie-details";
 import { StatsDashboard } from "./pages/stats-dashboard";
 import { Toaster } from "@/components/ui/sonner";
 import { authApi } from "./lib/api/api-calls";
-import Login from "./pages/Login.tsx";
-import Navbar from "./components/ui/Navbar.tsx";
+import Login from "./pages/Login";
+import Navbar from "./components/ui/Navbar";
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
