@@ -19,14 +19,5 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
-
-    rules: {
-      "unicorn/filename-case": [
-        "error",
-        {
-          case: "kebabCase",
-        },
-      ],
-    },
   },
 ]);
