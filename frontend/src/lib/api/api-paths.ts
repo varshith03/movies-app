@@ -8,7 +8,7 @@ export const API_PATHS = {
     EXPORT: `${API_BASE_URL}/movies/export`,
   },
   AUTH: {
-    LOGIN: `${API_BASE_URL}/auth/login`,
-    LOGOUT: `${API_BASE_URL}/auth/logout`,
+    LOGIN: `${API_BASE_URL}/movies/auth/login`,
+    LOGOUT: `${API_BASE_URL}/movies/auth/logout`,
   },
 } as const;
