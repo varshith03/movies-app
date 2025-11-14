@@ -4,7 +4,7 @@ import { BarChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/api/api-calls";
 
-export function Navbar() {
+export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {

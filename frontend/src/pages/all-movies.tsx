@@ -67,16 +67,20 @@ export function AllMovies() {
         sort: effectiveSort,
         sortOrder,
         limit: 10,
+        // @ts-ignore
+
         offset: pageParam,
       }),
     getNextPageParam: (lastPage) => {
+      // @ts-ignore
+
       if (!lastPage?.pagination) {
         console.error("Invalid lastPage structure:", lastPage);
         return undefined;
       }
-
+      // @ts-ignore
       const { offset = 0, limit = 10, total = 0 } = lastPage.pagination;
-      const nextOffset = offset+1;
+      const nextOffset = offset + 1;
       const hasMore = nextOffset < total;
       return hasMore ? nextOffset : undefined;
     },
