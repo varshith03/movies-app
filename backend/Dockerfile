@@ -1,13 +1,15 @@
-FROM node:20-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --production
+RUN npm ci --only=production
 
 COPY . .
 
-EXPOSE 3001
+RUN npm run build
 
-CMD ["node", "app.js"]
+EXPOSE 8080
+
+CMD ["npm", "start"]

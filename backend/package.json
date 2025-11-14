@@ -1,20 +1,54 @@
 {
-  "name": "backend",
+  "name": "movies-app-backend",
   "version": "1.0.0",
-  "description": "this is be",
-  "main": "index.js",
+  "description": "TypeScript + Express.js backend for Movies App with MongoDB",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "start:dev": "ts-node src/app.ts",
+    "clean": "rm -rf dist",
+    "build:watch": "tsc --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'No linting configured yet'",
+    "test": "echo \"No tests specified yet\" && exit 0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "express",
+    "typescript",
+    "mongodb",
+    "jwt",
+    "movies",
+    "api",
+    "rest"
+  ],
+  "author": "Movies App Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "csv-writer": "^1.6.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^24.10.1",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

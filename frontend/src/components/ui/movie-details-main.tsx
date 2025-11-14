@@ -6,17 +6,14 @@ interface MovieDetailsMainProps {
 }
 
 export default function MovieDetailsMain({ movie }: MovieDetailsMainProps) {
-  // Format release year from the year field
   const releaseYear = movie.year;
 
-  // Format runtime
   const hours = Math.floor(movie.runtime / 60);
   const minutes = movie.runtime % 60;
   const formattedRuntime = `${hours}h ${minutes}m`;
 
   return (
     <div className="bg-background/95 pb-8 rounded-md shadow-lg">
-      {/* Backdrop Image */}
       <div
         className="w-full bg-cover bg-center bg-primary-foreground min-h-[200px] rounded-md"
         style={
@@ -28,7 +25,6 @@ export default function MovieDetailsMain({ movie }: MovieDetailsMainProps) {
         }
       />
 
-      {/* Movie Content */}
       <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 -mt-40 relative z-10">
         <div className="flex flex-col items-center md:items-start md:flex-row gap-8">
           {/* Movie Poster */}

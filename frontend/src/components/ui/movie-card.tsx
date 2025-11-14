@@ -1,4 +1,3 @@
-import React from "react";
 import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,16 +20,12 @@ export default function MovieCard({
   genres = [],
   className,
 }: MovieCardProps) {
-  const year = releaseYear ? new Date(releaseYear).getFullYear() : "";
 
   return (
-    // outer padded container to match the white space around the card in your example
     <div className={cn("p-4", className)}>
       <Card className="group overflow-visible rounded-2xl shadow-md p-0">
-        {/* image area with white frame / inset */}
         <div className="py-5 px-4">
           {" "}
-          {/* space between card edge and framed poster */}
           <div className="rounded-xl bg-white shadow-inner">
             <div className="relative overflow-hidden rounded-md aspect-[2/3] bg-slate-800">
               <img
@@ -45,15 +40,13 @@ export default function MovieCard({
           </div>
         </div>
 
-        {/* separate footer section BELOW the card content (not inside CardContent) to match your mock */}
       </Card>
 
-      {/* details block below card (separate section) */}
       <div className="mt-3 flex items-start justify-between gap-3">
         <div className="flex-1">
           <h3 className="text-sm font-semibold line-clamp-2">{title}</h3>
           <div className="mt-1 text-xs text-muted-foreground">
-            {year}
+            {releaseYear}
             {genres && ` • ${genres}`}
           </div>
         </div>

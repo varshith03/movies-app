@@ -8,12 +8,13 @@ import {
   CustomDropdownCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
-import { MovieGrid } from "@/components/ui/MovieGrid";
-import { useQuery } from "@tanstack/react-query";
-import { movieApi } from "@/lib/api/movie-api";
+import { ChevronDown, Download, SortAsc, SortDesc, Filter } from "lucide-react";
+import { MovieGrid } from "@/components/ui/movie-grid";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { movieApi } from "@/lib/api/api-calls";
 import type { MovieApiResponse } from "@/types";
-import { allMovies } from "@/data/mock";
+import { SearchBar } from "@/components/ui/search-bar";
+import { downloadBlob } from "@/lib/utils";
 
 // Get unique genres from the movies data
 const getUniqueGenres = (movies: MovieApiResponse[]): Set<string> => {
@@ -28,49 +29,65 @@ const getUniqueGenres = (movies: MovieApiResponse[]): Set<string> => {
 const SORT_OPTIONS = new Set(["Rating", "Release Date"]);
 
 export function AllMovies() {
-  const [movies, setMovies] = useState<MovieApiResponse[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("popularity");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  const genresCsv = Array.from(selectedGenres).sort().join(",");
+  const effectiveSort = sortBy === "release_date" ? "year" : sortBy;
+
   const {
-    data: moviess = [],
+    data: response,
     isLoading,
-    isError,
-    error,
-  } = useQuery<MovieApiResponse[], Error>({
-    queryKey: ["movies"],
-    queryFn: movieApi.fetchMovies,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    // @ts-ignore
+  } = useInfiniteQuery({
+    queryKey: [
+      "movies",
+      {
+        search: debouncedSearch,
+        genres: genresCsv,
+        sortBy: effectiveSort,
+        sortOrder,
+      },
+    ],
+    queryFn: ({ pageParam = 0 }) =>
+      movieApi.fetchMovies({
+        search: debouncedSearch,
+        filter: genresCsv,
+        sort: effectiveSort,
+        sortOrder,
+        limit: 10,
+        // @ts-ignore
+
+        offset: pageParam,
+      }),
+    getNextPageParam: (lastPage) => {
+      // @ts-ignore
+
+      if (!lastPage?.pagination) {
+        console.error("Invalid lastPage structure:", lastPage);
+        return undefined;
+      }
+      // @ts-ignore
+      const { offset = 0, limit = 10, total = 0 } = lastPage.pagination;
+      const nextOffset = offset + 1;
+      const hasMore = nextOffset < total;
+      return hasMore ? nextOffset : undefined;
+    },
     staleTime: 5 * 60 * 1000,
   });
 
-  useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        // Replace with your actual API call
-        // const response = await fetch('YOUR_API_ENDPOINT');
-        // const data = await response.json();
-        // setMovies(data.results);
-
-        setMovies(allMovies);
-      } catch (error) {
-        console.error("Error fetching movies:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMovies();
-  }, []);
-
-  // Log filter changes
-  useEffect(() => {
-    console.log("Selected genres:", selectedGenres);
-    console.log("Sort by:", sortBy);
-    console.log("Sort order:", sortOrder);
-  }, [selectedGenres, sortBy, sortOrder]);
+  const movies = response?.pages.flatMap((page: any) => page.data) || [];
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => {
@@ -85,9 +102,8 @@ export function AllMovies() {
   };
 
   const isGenreSelected = (genre: string) => selectedGenres.has(genre);
-  console.log(selectedGenres);
 
-  const filteredMovies = allMovies
+  const filteredMovies = movies
     .filter((movie) => {
       if (selectedGenres.size === 0) return true;
       return Array.from(selectedGenres).some((genre) =>
@@ -96,39 +112,45 @@ export function AllMovies() {
     })
     .filter((movie) =>
       movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => {
-      let compareResult = 0;
+    );
 
-      if (sortBy === "title") {
-        compareResult = a.title.localeCompare(b.title);
-      } else if (sortBy === "release_date") {
-        compareResult =
-          new Date(a.release_date).getTime() -
-          new Date(b.release_date).getTime();
-      } else {
-        // @ts-ignore
-        compareResult = (a[sortBy] || 0) - (b[sortBy] || 0);
-      }
+  const loadMore = () => {
+    if (hasNextPage) {
+      fetchNextPage();
+    }
+  };
 
-      return sortOrder === "asc" ? compareResult : -compareResult;
-    });
-
-  if (loading) {
+  if (isLoading && !response) {
     return (
       <div className="flex justify-center items-center h-64">Loading...</div>
     );
   }
 
   return (
-    <div className="mx-auto px-32 py-8 bg-background/95">
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-background/95">
       <div className="flex flex-col space-y-4 mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
             All Movies
           </h1>
 
+          <div className="flex-1 min-w-[240px]">
+            <SearchBar value={searchTerm} onChange={setSearchTerm} />
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              title="Download CSV"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-input hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+              onClick={async () => {
+                const blob = await movieApi.exportMovies();
+                downloadBlob(blob, "movies_export.csv");
+              }}
+            >
+              <Download className="h-4 w-4" />
+              <span className="sr-only">Download CSV</span>
+            </button>
             {/* Genre Filter */}
             <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-md border border-border p-1">
               <DropdownMenu>
@@ -138,22 +160,7 @@ export function AllMovies() {
                     size="sm"
                     className="gap-1.5 text-sm font-medium text-foreground hover:bg-accent cursor-pointer"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                    >
-                      <path d="M3 6h18" />
-                      <path d="M6 12h12" />
-                      <path d="M9 18h6" />
-                    </svg>
+                    <Filter className="h-4 w-4" />
                     <span>Genres</span>
                     {selectedGenres.size > 0 && (
                       <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs">
@@ -172,7 +179,7 @@ export function AllMovies() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-border" />
                   <div className="max-h-64 overflow-y-auto p-1">
-                    {Array.from(getUniqueGenres(allMovies)).map((genre, i) => (
+                    {Array.from(getUniqueGenres(movies)).map((genre, i) => (
                       <CustomDropdownCheckboxItem
                         key={`genre-${i}`}
                         checked={isGenreSelected(genre)}
@@ -245,46 +252,12 @@ export function AllMovies() {
               >
                 {sortOrder === "desc" ? (
                   <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                    >
-                      <path d="m3 16 4 4 4-4" />
-                      <path d="M7 20V4" />
-                      <path d="M11 4h10" />
-                      <path d="M11 8h7" />
-                      <path d="M11 12h4" />
-                    </svg>
+                    <SortDesc className="h-4 w-4" />
                     <span>Descending</span>
                   </>
                 ) : (
                   <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                    >
-                      <path d="m3 8 4-4 4 4" />
-                      <path d="M7 4v16" />
-                      <path d="M11 12h10" />
-                      <path d="M11 16h7" />
-                      <path d="M11 20h4" />
-                    </svg>
+                    <SortAsc className="h-4 w-4" />
                     <span>Ascending</span>
                   </>
                 )}
@@ -294,7 +267,18 @@ export function AllMovies() {
         </div>
       </div>
 
-      <MovieGrid movies={filteredMovies} />
+      <MovieGrid movies={filteredMovies} className="mt-8" />
+      {hasNextPage && (
+        <div className="flex justify-center mt-8">
+          <Button
+            onClick={loadMore}
+            disabled={isFetchingNextPage}
+            className="px-8 py-6 text-lg cursor-pointer"
+          >
+            {isFetchingNextPage ? "Loading..." : "Show More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
