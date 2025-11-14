@@ -39,13 +39,16 @@ export class MovieService {
     }
 
     const sortDirection: SortOrder = sortOrder === "asc" ? 1 : -1;
-    let sortOptions: Record<string, SortOrder> = { _id: 1 };
+    let sortOptions: Record<string, SortOrder> = { id: 1 };
 
     if (sort === "rating") {
-      sortOptions = { rating: sortDirection };
+      // Sort by rating first, then id as tiebreaker
+      sortOptions = { rating: sortDirection, id: 1 };
     } else if (sort === "year") {
-      sortOptions = { year: sortDirection };
+      // Sort by year first, then id as tiebreaker
+      sortOptions = { year: sortDirection, id: 1 };
     }
+
     const [movies, total] = await Promise.all([
       Movie.find(mongoFilter)
         .sort(sortOptions)
